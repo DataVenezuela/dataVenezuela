@@ -1,0 +1,609 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "dataVenezuela Public Serving API",
+    "version": "1.0.0",
+    "description": "Contrato HTTP de solo lectura para el plano publico Worker/D1. El trafico publico no consulta Supabase directamente."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "summary": "Estado del Worker y del artefacto publico",
+        "responses": {
+          "200": {
+            "description": "Worker disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/personas": {
+      "get": {
+        "summary": "Buscar personas por nombre",
+        "parameters": [
+          {
+            "name": "nombre",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 120
+            },
+            "description": "Texto de busqueda. Debe tener al menos 3 caracteres para evitar enumeracion."
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 80
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PersonStatus"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultados de busqueda",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/v1/personas/{person_record_id}": {
+      "get": {
+        "summary": "Obtener detalle publico de una persona",
+        "parameters": [
+          {
+            "name": "person_record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Persona encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/v1/acopio": {
+      "get": {
+        "summary": "Listar centros de acopio",
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 80
+            }
+          },
+          {
+            "name": "needs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 80
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AcopioStatus"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Centros de acopio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcopioListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/events": {
+      "get": {
+        "summary": "Listar eventos disponibles en el artefacto publico",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/EventStatus"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eventos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "BadRequest": {
+        "description": "Parametros invalidos",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso no encontrado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "snapshot_version": {
+            "type": "string",
+            "description": "Version o timestamp del artefacto D1 activo."
+          }
+        }
+      },
+      "PersonListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "limit"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonPublic"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 20
+          }
+        }
+      },
+      "PersonDetailResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "person"
+        ],
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonPublic"
+          }
+        }
+      },
+      "PersonPublic": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "person_record_id",
+          "event_id",
+          "status",
+          "verification_status",
+          "confidence_score"
+        ],
+        "properties": {
+          "person_record_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "full_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "alternate_names": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "cedula_masked": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "age_range": {
+            "$ref": "#/components/schemas/JsonObjectOrNull"
+          },
+          "sex": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Sex"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_known_location": {
+            "$ref": "#/components/schemas/JsonObjectOrNull"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PersonStatus"
+          },
+          "verification_status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "confidence_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          }
+        }
+      },
+      "AcopioListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "limit"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcopioPublic"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 20
+          }
+        }
+      },
+      "AcopioPublic": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "acopio_id",
+          "event_id",
+          "name",
+          "status",
+          "confidence_score"
+        ],
+        "properties": {
+          "acopio_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/JsonObjectOrNull"
+          },
+          "confidence_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "status": {
+            "$ref": "#/components/schemas/AcopioStatus"
+          },
+          "needs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "last_verified_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "managing_org": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contact_masked": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "capacity": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "current_load": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "EventListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "limit"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventPublic"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 20
+          }
+        }
+      },
+      "EventPublic": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "name",
+          "event_type",
+          "occurred_at",
+          "status"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "earthquake",
+              "flood",
+              "landslide",
+              "other"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "affected_states": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "magnitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "depth_km": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/EventStatus"
+          },
+          "external_ids": {
+            "$ref": "#/components/schemas/JsonObjectOrNull"
+          }
+        }
+      },
+      "JsonObjectOrNull": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "additionalProperties": true
+      },
+      "PersonStatus": {
+        "type": "string",
+        "enum": [
+          "missing",
+          "found",
+          "injured",
+          "deceased",
+          "unknown"
+        ]
+      },
+      "VerificationStatus": {
+        "type": "string",
+        "enum": [
+          "unverified",
+          "pending",
+          "verified",
+          "conflicting"
+        ]
+      },
+      "Sex": {
+        "type": "string",
+        "enum": [
+          "M",
+          "F",
+          "unknown"
+        ]
+      },
+      "AcopioStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "full",
+          "closed",
+          "unverified"
+        ]
+      },
+      "EventStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "monitoring",
+          "closed"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
