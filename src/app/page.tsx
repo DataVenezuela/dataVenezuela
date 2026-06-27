@@ -34,6 +34,9 @@ export default async function Home() {
         <Link href="/register" className={btnSecondary}>
           Registrarme como scraper
         </Link>
+        <Link href="/docs" className={btnSecondary}>
+          Documentación de la API
+        </Link>
         <Link href="/account" className={btnSecondary}>
           Mi cuenta / API keys
         </Link>

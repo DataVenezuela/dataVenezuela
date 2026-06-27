@@ -71,7 +71,7 @@ API key del scraper demo: header `x-api-key: demo-scraper-key`.
 
 ## Rutas
 
-**Público:** `/` · `/sources` · `/register` · `/login` · `/account`
+**Público:** `/` · `/docs` (guía de la API para scrapers) · `/sources` · `/register` · `/login` · `/account`
 **Panel (admin, login en `/login`):** `/admin/users` · `/admin/sources`
 
 **API:**

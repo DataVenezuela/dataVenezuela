@@ -139,7 +139,11 @@ export default async function AccountPage() {
               <p className="mt-1 text-sm text-gray-600">
                 Usa estas keys para subir datos a <code>/api/aportes</code> con el
                 header <code>x-api-key</code>. Incluye <code>source_id</code> en el
-                cuerpo de cada aporte.
+                cuerpo de cada aporte.{" "}
+                <Link href="/docs" className="text-blue-600 hover:underline">
+                  Ver la documentación
+                </Link>
+                .
               </p>
             </div>
 
