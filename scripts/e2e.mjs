@@ -101,5 +101,95 @@ const b7 = await r7.json();
 check(`GET público por id → 200 (${r7.status})`, r7.status === 200 && b7.aporte?.id === b1.id);
 check("la lectura pública NO expone scraper_id", b7.aporte && !("scraper_id" in b7.aporte));
 
+// ---------------------------------------------------------------------------
+// Esquema normalizado (Vzla_Dedup): event → person → person_note + negativos.
+// ---------------------------------------------------------------------------
+const postDedup = (path, body, headers = {}) =>
+  fetch(`${appUrl}/api/v1/dedup/${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  });
+const KEY = { "x-api-key": DEMO_KEY };
+
+// 8. Crear evento → 201 con id
+const e1 = await postDedup(
+  "events",
+  {
+    name: `E2E Terremoto ${Date.now()}`,
+    event_type: "earthquake",
+    occurred_at: "2026-06-24T12:00:00Z",
+    status: "active",
+    magnitude: 5.4,
+  },
+  KEY,
+);
+const eb1 = await e1.json();
+check(`POST event → 201 (${e1.status})`, e1.status === 201 && Boolean(eb1.id));
+const eventId = eb1.id;
+
+// 9. Crear persona en ese evento → 201
+const p1 = await postDedup(
+  "persons",
+  {
+    event_id: eventId,
+    full_name: "juan perez",
+    status: "missing",
+    verification_status: "unverified",
+    confidence_score: 0.75,
+  },
+  KEY,
+);
+const pb1 = await p1.json();
+check(`POST person → 201 (${p1.status})`, p1.status === 201 && Boolean(pb1.id));
+const personId = pb1.id;
+
+// 10. Crear nota sobre la persona → 201
+const n1 = await postDedup(
+  "person-notes",
+  {
+    person_record_id: personId,
+    note_type: "missing",
+    status: "active",
+    last_seen_at: "2026-06-24T18:00:00Z",
+  },
+  KEY,
+);
+check(`POST person-note → 201 (${n1.status})`, n1.status === 201);
+
+// 11. Persona con event_id inexistente → 404
+const p404 = await postDedup(
+  "persons",
+  {
+    event_id: "00000000-0000-4000-8000-000000000000",
+    status: "missing",
+    verification_status: "unverified",
+  },
+  KEY,
+);
+check(`POST person FK inexistente → 404 (${p404.status})`, p404.status === 404);
+
+// 12. Evento sin key → 401
+const e401 = await postDedup("events", {
+  name: "x",
+  event_type: "flood",
+  occurred_at: "2026-06-24T12:00:00Z",
+  status: "active",
+});
+check(`POST event sin key → 401 (${e401.status})`, e401.status === 401);
+
+// 13. Evento con enum inválido → 422
+const e422 = await postDedup(
+  "events",
+  {
+    name: "x",
+    event_type: "tsunami",
+    occurred_at: "2026-06-24T12:00:00Z",
+    status: "active",
+  },
+  KEY,
+);
+check(`POST event enum inválido → 422 (${e422.status})`, e422.status === 422);
+
 console.log(failures === 0 ? "\nTodo verde." : `\n${failures} fallo(s).`);
 process.exit(failures === 0 ? 0 : 1);

@@ -8,10 +8,10 @@ export const userRoleEnum = z.enum(["public_submitter", "scraper", "admin"]);
 // ---------------------------------------------------------------------------
 // Helpers: trata "" como ausente (los formularios envían strings vacíos)
 // ---------------------------------------------------------------------------
-const emptyToUndefined = (v: unknown) =>
+export const emptyToUndefined = (v: unknown) =>
   typeof v === "string" && v.trim() === "" ? undefined : v;
 
-const optionalText = z.preprocess(emptyToUndefined, z.string().optional());
+export const optionalText = z.preprocess(emptyToUndefined, z.string().optional());
 const optionalUrl = z.preprocess(emptyToUndefined, z.url().optional());
 
 // ---------------------------------------------------------------------------
