@@ -30,6 +30,17 @@ Tablas de apoyo: `profiles` (rol + estado de scraper), `scraper_applications`
 
 Esquema en `supabase/migrations/`.
 
+## Serving publico
+
+La API publica de consulta se define como un plano separado: Cloudflare Worker +
+D1/SQLite, alimentado por una proyeccion segura de Supabase. Este repo mantiene
+la proyeccion de BD y el contrato OpenAPI; el trafico publico no debe consultar
+Supabase directamente.
+
+- Proyeccion: `supabase/migrations/0007_public_serving_projection.sql`
+- Contrato HTTP: `docs/openapi-public-serving.json`
+- Guia: `docs/serving-publico.md`
+
 **Acceso:** la **escritura** (ingesta) requiere `x-api-key`; la **lectura** de
 aportes es **pública** vía los route handlers (cliente service-role, columnas
 seguras). Las acciones internas (gestión de scrapers/fuentes/keys) validan rol en
