@@ -67,6 +67,44 @@ print(res.status_code, res.json())  # 201 {...}`,
   },
 ];
 
+// Flujo encadenado del esquema normalizado: evento → persona → nota.
+const dedupSamples = [
+  {
+    label: "curl",
+    code: `# 1) Crear el evento → guarda "id" como EVENT_ID
+curl -X POST ${BASE}/api/v1/dedup/events \\
+  -H "x-api-key: TU_API_KEY" -H "content-type: application/json" \\
+  -d '{
+    "name": "Terremoto Yaracuy",
+    "event_type": "earthquake",
+    "occurred_at": "2026-06-24T12:00:00Z",
+    "status": "active",
+    "magnitude": 5.4
+  }'
+
+# 2) Crear la persona en ese evento → guarda "id" como PERSON_ID
+curl -X POST ${BASE}/api/v1/dedup/persons \\
+  -H "x-api-key: TU_API_KEY" -H "content-type: application/json" \\
+  -d '{
+    "event_id": "EVENT_ID",
+    "full_name": "juan perez",
+    "status": "missing",
+    "verification_status": "unverified",
+    "confidence_score": 0.75
+  }'
+
+# 3) Añadir una nota sobre la persona
+curl -X POST ${BASE}/api/v1/dedup/person-notes \\
+  -H "x-api-key: TU_API_KEY" -H "content-type: application/json" \\
+  -d '{
+    "person_record_id": "PERSON_ID",
+    "note_type": "missing",
+    "status": "active",
+    "last_seen_at": "2026-06-24T18:00:00Z"
+  }'`,
+  },
+];
+
 export default function DocsPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
@@ -324,6 +362,78 @@ export default function DocsPage() {
           </li>
           <li>No incluyas secretos ni datos sensibles innecesarios en el payload.</li>
         </ul>
+      </section>
+
+      {/* Esquema normalizado (Vzla_Dedup) */}
+      <section className="mt-12 border-t border-gray-200 pt-8">
+        <h2 className="text-xl font-semibold">Esquema normalizado (Vzla_Dedup)</h2>
+        <p className="mt-2 text-sm text-gray-700">
+          Además del feed en bruto de <C>aportes</C>, puedes escribir directamente
+          en el modelo <strong>normalizado y deduplicado</strong>. Misma
+          autenticación (<C>x-api-key</C>) y mismo formato de errores. Cada
+          endpoint crea un registro y responde <C>201</C> con{" "}
+          <C>{`{ id, status: "created" }`}</C>.
+        </p>
+
+        <div className={`mt-3 overflow-x-auto ${card} p-0`}>
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+              <tr>
+                <th className="px-4 py-2">Endpoint</th>
+                <th className="px-4 py-2">Crea</th>
+                <th className="px-4 py-2">FK requerida</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-gray-600">
+              <tr>
+                <td className="px-4 py-2"><C>POST /api/v1/dedup/events</C></td>
+                <td className="px-4 py-2">Evento de crisis</td>
+                <td className="px-4 py-2">—</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2"><C>POST /api/v1/dedup/persons</C></td>
+                <td className="px-4 py-2">Persona del evento</td>
+                <td className="px-4 py-2"><C>event_id</C></td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2"><C>POST /api/v1/dedup/person-notes</C></td>
+                <td className="px-4 py-2">Hecho sobre una persona</td>
+                <td className="px-4 py-2"><C>person_record_id</C></td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2"><C>POST /api/v1/dedup/person-sources</C></td>
+                <td className="px-4 py-2">Fuente/corroboración</td>
+                <td className="px-4 py-2"><C>person_record_id</C></td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2"><C>POST /api/v1/dedup/person-photos</C></td>
+                <td className="px-4 py-2">Foto de una persona</td>
+                <td className="px-4 py-2"><C>person_record_id</C></td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2"><C>POST /api/v1/dedup/acopio-centers</C></td>
+                <td className="px-4 py-2">Centro de acopio</td>
+                <td className="px-4 py-2"><C>event_id</C></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-3 rounded-md bg-blue-50 p-3 text-sm text-blue-900">
+          La privacidad es responsabilidad del scraper: envía <C>cedula_hmac</C> y{" "}
+          <C>contact_hmac</C> ya hasheados (SHA-256 hex, 64 caracteres) y los
+          campos <C>*_masked</C> ya enmascarados. La API <strong>nunca</strong>{" "}
+          recibe datos personales en claro. Si una FK no existe, responde{" "}
+          <C>404</C>. El contrato completo (campos, enums y rangos) está en{" "}
+          <C>docs/api-dedup.md</C>.
+        </div>
+
+        <h3 className="mt-5 text-sm font-semibold text-gray-700">
+          Ejemplo end-to-end (evento → persona → nota)
+        </h3>
+        <div className="mt-2">
+          <CodeTabs samples={dedupSamples} />
+        </div>
       </section>
 
       <p className="mt-10 text-xs text-gray-400">
