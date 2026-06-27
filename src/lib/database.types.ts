@@ -34,6 +34,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      acopio_centers: {
+        Row: {
+          acopio_id: string
+          capacity: number | null
+          confidence_score: number
+          contact_hmac: string | null
+          contact_masked: string | null
+          current_load: number | null
+          event_id: string
+          last_verified_at: string | null
+          location: Json | null
+          managing_org: string | null
+          name: string
+          needs: Json | null
+          status: string
+        }
+        Insert: {
+          acopio_id?: string
+          capacity?: number | null
+          confidence_score?: number
+          contact_hmac?: string | null
+          contact_masked?: string | null
+          current_load?: number | null
+          event_id: string
+          last_verified_at?: string | null
+          location?: Json | null
+          managing_org?: string | null
+          name: string
+          needs?: Json | null
+          status: string
+        }
+        Update: {
+          acopio_id?: string
+          capacity?: number | null
+          confidence_score?: number
+          contact_hmac?: string | null
+          contact_masked?: string | null
+          current_load?: number | null
+          event_id?: string
+          last_verified_at?: string | null
+          location?: Json | null
+          managing_org?: string | null
+          name?: string
+          needs?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acopio_centers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
       aportes: {
         Row: {
           created_at: string
@@ -82,6 +138,42 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          affected_states: Json | null
+          depth_km: number | null
+          event_id: string
+          event_type: string
+          external_ids: Json | null
+          magnitude: number | null
+          name: string
+          occurred_at: string
+          status: string
+        }
+        Insert: {
+          affected_states?: Json | null
+          depth_km?: number | null
+          event_id?: string
+          event_type: string
+          external_ids?: Json | null
+          magnitude?: number | null
+          name: string
+          occurred_at: string
+          status: string
+        }
+        Update: {
+          affected_states?: Json | null
+          depth_km?: number | null
+          event_id?: string
+          event_type?: string
+          external_ids?: Json | null
+          magnitude?: number | null
+          name?: string
+          occurred_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       partner_api_keys: {
         Row: {
           active: boolean
@@ -117,6 +209,219 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_notes: {
+        Row: {
+          admitted_time: string | null
+          confirmed_by: string | null
+          deceased_at: string | null
+          entry_date: string
+          found: boolean | null
+          found_at: string | null
+          found_by: string | null
+          hospital_municipio: string | null
+          hospital_name: string | null
+          identification_status: string | null
+          last_known_location: Json | null
+          last_seen_at: string | null
+          last_seen_location: Json | null
+          note_record_id: string
+          note_type: string
+          person_record_id: string
+          recovery_location: Json | null
+          severity: string | null
+          source_date: string | null
+          status: string
+        }
+        Insert: {
+          admitted_time?: string | null
+          confirmed_by?: string | null
+          deceased_at?: string | null
+          entry_date?: string
+          found?: boolean | null
+          found_at?: string | null
+          found_by?: string | null
+          hospital_municipio?: string | null
+          hospital_name?: string | null
+          identification_status?: string | null
+          last_known_location?: Json | null
+          last_seen_at?: string | null
+          last_seen_location?: Json | null
+          note_record_id?: string
+          note_type: string
+          person_record_id: string
+          recovery_location?: Json | null
+          severity?: string | null
+          source_date?: string | null
+          status: string
+        }
+        Update: {
+          admitted_time?: string | null
+          confirmed_by?: string | null
+          deceased_at?: string | null
+          entry_date?: string
+          found?: boolean | null
+          found_at?: string | null
+          found_by?: string | null
+          hospital_municipio?: string | null
+          hospital_name?: string | null
+          identification_status?: string | null
+          last_known_location?: Json | null
+          last_seen_at?: string | null
+          last_seen_location?: Json | null
+          note_record_id?: string
+          note_type?: string
+          person_record_id?: string
+          recovery_location?: Json | null
+          severity?: string | null
+          source_date?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_notes_person_record_id_fkey"
+            columns: ["person_record_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["person_record_id"]
+          },
+        ]
+      }
+      person_photos: {
+        Row: {
+          caption: string | null
+          person_record_id: string
+          photo_id: string
+          source_id: string | null
+          uploaded_at: string
+          url: string
+        }
+        Insert: {
+          caption?: string | null
+          person_record_id: string
+          photo_id?: string
+          source_id?: string | null
+          uploaded_at?: string
+          url: string
+        }
+        Update: {
+          caption?: string | null
+          person_record_id?: string
+          photo_id?: string
+          source_id?: string | null
+          uploaded_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_photos_person_record_id_fkey"
+            columns: ["person_record_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["person_record_id"]
+          },
+          {
+            foreignKeyName: "person_photos_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "person_sources"
+            referencedColumns: ["source_id"]
+          },
+        ]
+      }
+      person_sources: {
+        Row: {
+          ext_id: string | null
+          fetched_at: string
+          person_record_id: string
+          source_id: string
+          source_url: string
+          trust_tier: number
+        }
+        Insert: {
+          ext_id?: string | null
+          fetched_at?: string
+          person_record_id: string
+          source_id?: string
+          source_url: string
+          trust_tier: number
+        }
+        Update: {
+          ext_id?: string | null
+          fetched_at?: string
+          person_record_id?: string
+          source_id?: string
+          source_url?: string
+          trust_tier?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_sources_person_record_id_fkey"
+            columns: ["person_record_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["person_record_id"]
+          },
+        ]
+      }
+      persons: {
+        Row: {
+          age_range: Json | null
+          alternate_names: Json | null
+          cedula_hmac: string | null
+          cedula_masked: string | null
+          confidence_score: number
+          event_id: string
+          full_name: string | null
+          is_minor: boolean | null
+          last_known_location: Json | null
+          person_record_id: string
+          sex: string | null
+          source_url: string | null
+          status: string
+          verification_status: string
+        }
+        Insert: {
+          age_range?: Json | null
+          alternate_names?: Json | null
+          cedula_hmac?: string | null
+          cedula_masked?: string | null
+          confidence_score?: number
+          event_id: string
+          full_name?: string | null
+          is_minor?: boolean | null
+          last_known_location?: Json | null
+          person_record_id?: string
+          sex?: string | null
+          source_url?: string | null
+          status: string
+          verification_status: string
+        }
+        Update: {
+          age_range?: Json | null
+          alternate_names?: Json | null
+          cedula_hmac?: string | null
+          cedula_masked?: string | null
+          confidence_score?: number
+          event_id?: string
+          full_name?: string | null
+          is_minor?: boolean | null
+          last_known_location?: Json | null
+          person_record_id?: string
+          sex?: string | null
+          source_url?: string | null
+          status?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persons_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["event_id"]
           },
         ]
       }
@@ -251,6 +556,7 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      can_ingest: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
