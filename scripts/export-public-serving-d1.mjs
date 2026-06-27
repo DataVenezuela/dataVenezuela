@@ -190,7 +190,7 @@ async function fetchAll(supabase, def) {
 
 function parseArgs(argv) {
   const outIndex = argv.indexOf("--out");
-  if (outIndex !== -1 && !argv[outIndex + 1]) {
+  if (outIndex !== -1 && (!argv[outIndex + 1] || argv[outIndex + 1].startsWith("--"))) {
     throw new Error("Uso: npm run public-serving:export -- --out /tmp/public-serving.sql");
   }
 
