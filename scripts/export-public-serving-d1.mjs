@@ -169,6 +169,9 @@ function renderD1Sql(snapshot, generatedAt = new Date().toISOString()) {
 
 async function fetchAll(supabase, def) {
   const pageSize = Number(process.env.PUBLIC_SERVING_PAGE_SIZE ?? 1000);
+  if (!Number.isInteger(pageSize) || pageSize < 1) {
+    throw new Error("PUBLIC_SERVING_PAGE_SIZE debe ser un entero >= 1");
+  }
   let from = 0;
   const rows = [];
 
