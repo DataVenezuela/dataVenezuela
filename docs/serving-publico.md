@@ -21,6 +21,18 @@ y no abre conexiones publicas contra Supabase.
 4. El Worker responde `GET /v1/personas`, `GET /v1/acopio`, `GET /v1/events` y
    `GET /healthz` desde ese artefacto.
 
+## Exportar artefacto D1
+
+El primer job disponible genera SQL importable por Cloudflare D1:
+
+```bash
+npm run public-serving:export > /tmp/public-serving.sql
+npx wrangler d1 execute <DB_NAME> --remote --file /tmp/public-serving.sql
+```
+
+Requiere `NEXT_PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`. En local se
+cargan desde `.env.local` por el script de npm.
+
 ## Privacidad
 
 El contrato HTTP nunca expone campos de ingesta o secretos operativos como
