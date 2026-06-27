@@ -1,0 +1,5 @@
+-- Sin datos de ejemplo a nivel SQL.
+--
+-- Las fuentes y aportes de demostración dependen de perfiles (scraper dueño), que
+-- a su vez requieren usuarios de Auth. Por eso TODO el sembrado de demo se hace en
+-- `scripts/seed.mjs` (ejecutado con `npm run seed`), después de crear los usuarios.
