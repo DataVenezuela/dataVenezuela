@@ -39,7 +39,7 @@ describe("public serving OpenAPI contract", () => {
     const limit = params.find((param: { name: string }) => param.name === "limit");
 
     if (!nombre || !limit) {
-      throw new Error("El contrato debe declarar los parametros nombre y limit");
+      throw new Error("El contrato debe declarar los parámetros nombre y limit");
     }
 
     expect(nombre.required).toBe(true);
