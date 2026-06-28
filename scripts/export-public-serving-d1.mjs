@@ -179,6 +179,7 @@ async function fetchAll(supabase, def) {
     const { data, error } = await supabase
       .from(def.view)
       .select(def.columns.join(","))
+      .order(def.columns[0], { ascending: true })
       .range(from, from + pageSize - 1);
     if (error) throw error;
 
