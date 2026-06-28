@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "node --env-file=.env.local scripts/seed.mjs",
+    "import:dataset": "node --env-file=.env.local scripts/import-dataset.mjs",
     "e2e": "node --env-file=.env.local scripts/e2e.mjs",
     "db:reset": "supabase db reset",
     "gen:types": "supabase gen types typescript --local > src/lib/database.types.ts"
