@@ -37,9 +37,12 @@ D1/SQLite, alimentado por una proyeccion segura de Supabase. Este repo mantiene
 la proyeccion de BD y el contrato OpenAPI; el trafico publico no debe consultar
 Supabase directamente.
 
+- Decision (ADR): `docs/adr/0001-arquitectura-serving-publico.md`
 - Proyeccion: `supabase/migrations/0007_public_serving_projection.sql`
 - Contrato HTTP: `docs/openapi-public-serving.json`
 - Guia: `docs/serving-publico.md`
+- Plan de implementacion: `docs/serving-implementation-plan.md`
+- Revision de PII: `docs/serving-pii-review.md`
 
 **Acceso:** la **escritura** (ingesta) requiere `x-api-key`; la **lectura** de
 aportes es **pública** vía los route handlers (cliente service-role, columnas
