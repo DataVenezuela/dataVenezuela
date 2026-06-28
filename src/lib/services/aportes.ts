@@ -58,6 +58,18 @@ export async function createAporte(
       raw_text: input.rawText ?? null,
       source_id: sourceId,
       scraper_id: scraperId,
+      // Campos de staging para dedup cross-source (1:1 con el body camelCase).
+      run_id: input.runId ?? null,
+      entity_type: input.entityType ?? null,
+      dedup_hash: input.dedupHash ?? null,
+      dedup_version: input.dedupVersion ?? null,
+      block_keys: input.blockKeys ?? null,
+      content_hash: input.contentHash ?? null,
+      source_record_id: input.sourceRecordId ?? null,
+      source_url: input.sourceUrl ?? null,
+      parser_version: input.parserVersion ?? null,
+      normalizer_version: input.normalizerVersion ?? null,
+      raw_artifact_id: input.rawArtifactId ?? null,
     })
     .select("id")
     .single();

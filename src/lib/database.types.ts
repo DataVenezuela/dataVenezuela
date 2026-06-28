@@ -88,37 +88,80 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["event_id"]
           },
+          {
+            foreignKeyName: "acopio_centers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_serving_events"
+            referencedColumns: ["event_id"]
+          },
         ]
       }
       aportes: {
         Row: {
+          block_keys: string[] | null
+          consolidated_at: string | null
+          content_hash: string | null
           created_at: string
+          dedup_hash: string | null
+          dedup_version: string | null
+          entity_type: string | null
           external_id: string | null
           id: string
+          normalizer_version: string | null
+          parser_version: string | null
+          raw_artifact_id: string | null
           raw_json: Json | null
           raw_text: string | null
+          run_id: string | null
           scraper_id: string | null
           source_id: string | null
+          source_record_id: string | null
+          source_url: string | null
           updated_at: string
         }
         Insert: {
+          block_keys?: string[] | null
+          consolidated_at?: string | null
+          content_hash?: string | null
           created_at?: string
+          dedup_hash?: string | null
+          dedup_version?: string | null
+          entity_type?: string | null
           external_id?: string | null
           id?: string
+          normalizer_version?: string | null
+          parser_version?: string | null
+          raw_artifact_id?: string | null
           raw_json?: Json | null
           raw_text?: string | null
+          run_id?: string | null
           scraper_id?: string | null
           source_id?: string | null
+          source_record_id?: string | null
+          source_url?: string | null
           updated_at?: string
         }
         Update: {
+          block_keys?: string[] | null
+          consolidated_at?: string | null
+          content_hash?: string | null
           created_at?: string
+          dedup_hash?: string | null
+          dedup_version?: string | null
+          entity_type?: string | null
           external_id?: string | null
           id?: string
+          normalizer_version?: string | null
+          parser_version?: string | null
+          raw_artifact_id?: string | null
           raw_json?: Json | null
           raw_text?: string | null
+          run_id?: string | null
           scraper_id?: string | null
           source_id?: string | null
+          source_record_id?: string | null
+          source_url?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -287,6 +330,13 @@ export type Database = {
             referencedRelation: "persons"
             referencedColumns: ["person_record_id"]
           },
+          {
+            foreignKeyName: "person_notes_person_record_id_fkey"
+            columns: ["person_record_id"]
+            isOneToOne: false
+            referencedRelation: "public_serving_persons"
+            referencedColumns: ["person_record_id"]
+          },
         ]
       }
       person_photos: {
@@ -320,6 +370,13 @@ export type Database = {
             columns: ["person_record_id"]
             isOneToOne: false
             referencedRelation: "persons"
+            referencedColumns: ["person_record_id"]
+          },
+          {
+            foreignKeyName: "person_photos_person_record_id_fkey"
+            columns: ["person_record_id"]
+            isOneToOne: false
+            referencedRelation: "public_serving_persons"
             referencedColumns: ["person_record_id"]
           },
           {
@@ -362,6 +419,13 @@ export type Database = {
             columns: ["person_record_id"]
             isOneToOne: false
             referencedRelation: "persons"
+            referencedColumns: ["person_record_id"]
+          },
+          {
+            foreignKeyName: "person_sources_person_record_id_fkey"
+            columns: ["person_record_id"]
+            isOneToOne: false
+            referencedRelation: "public_serving_persons"
             referencedColumns: ["person_record_id"]
           },
         ]
@@ -421,6 +485,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "persons_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_serving_events"
             referencedColumns: ["event_id"]
           },
         ]
@@ -509,6 +580,32 @@ export type Database = {
           },
         ]
       }
+      source_watermarks: {
+        Row: {
+          source_slug: string
+          updated_at: string
+          watermark_at: string
+        }
+        Insert: {
+          source_slug: string
+          updated_at?: string
+          watermark_at?: string
+        }
+        Update: {
+          source_slug?: string
+          updated_at?: string
+          watermark_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_watermarks_source_slug_fkey"
+            columns: ["source_slug"]
+            isOneToOne: true
+            referencedRelation: "sources"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       sources: {
         Row: {
           created_at: string
@@ -549,7 +646,165 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_serving_acopio_centers: {
+        Row: {
+          acopio_id: string | null
+          capacity: number | null
+          confidence_score: number | null
+          contact_masked: string | null
+          current_load: number | null
+          event_id: string | null
+          last_verified_at: string | null
+          location: Json | null
+          managing_org: string | null
+          name: string | null
+          needs: Json | null
+          status: string | null
+        }
+        Insert: {
+          acopio_id?: string | null
+          capacity?: number | null
+          confidence_score?: number | null
+          contact_masked?: string | null
+          current_load?: number | null
+          event_id?: string | null
+          last_verified_at?: string | null
+          location?: Json | null
+          managing_org?: string | null
+          name?: string | null
+          needs?: Json | null
+          status?: string | null
+        }
+        Update: {
+          acopio_id?: string | null
+          capacity?: number | null
+          confidence_score?: number | null
+          contact_masked?: string | null
+          current_load?: number | null
+          event_id?: string | null
+          last_verified_at?: string | null
+          location?: Json | null
+          managing_org?: string | null
+          name?: string | null
+          needs?: Json | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acopio_centers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "acopio_centers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_serving_events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
+      public_serving_events: {
+        Row: {
+          affected_states: Json | null
+          depth_km: number | null
+          event_id: string | null
+          event_type: string | null
+          external_ids: Json | null
+          magnitude: number | null
+          name: string | null
+          occurred_at: string | null
+          status: string | null
+        }
+        Insert: {
+          affected_states?: Json | null
+          depth_km?: number | null
+          event_id?: string | null
+          event_type?: string | null
+          external_ids?: Json | null
+          magnitude?: number | null
+          name?: string | null
+          occurred_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          affected_states?: Json | null
+          depth_km?: number | null
+          event_id?: string | null
+          event_type?: string | null
+          external_ids?: Json | null
+          magnitude?: number | null
+          name?: string | null
+          occurred_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      public_serving_persons: {
+        Row: {
+          age_range: Json | null
+          alternate_names: Json | null
+          cedula_hmac: string | null
+          cedula_masked: string | null
+          confidence_score: number | null
+          event_id: string | null
+          full_name: string | null
+          last_known_location: Json | null
+          person_record_id: string | null
+          sex: string | null
+          source_url: string | null
+          status: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          age_range?: Json | null
+          alternate_names?: Json | null
+          cedula_hmac?: string | null
+          cedula_masked?: string | null
+          confidence_score?: number | null
+          event_id?: string | null
+          full_name?: string | null
+          last_known_location?: Json | null
+          person_record_id?: string | null
+          sex?: string | null
+          source_url?: string | null
+          status?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          age_range?: Json | null
+          alternate_names?: Json | null
+          cedula_hmac?: string | null
+          cedula_masked?: string | null
+          confidence_score?: number | null
+          event_id?: string | null
+          full_name?: string | null
+          last_known_location?: Json | null
+          person_record_id?: string | null
+          sex?: string | null
+          source_url?: string | null
+          status?: string | null
+          verification_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persons_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "persons_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_serving_events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
     }
     Functions: {
       auth_role: {

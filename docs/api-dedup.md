@@ -138,12 +138,72 @@ curl -X POST http://localhost:3000/api/v1/dedup/person-notes \
 
 ---
 
+## `POST /api/aportes` — campos de staging para dedup
+
+`POST /api/aportes` (ingesta de datos en bruto, auth `x-api-key`) acepta, además de
+los campos actuales (`sourceId`/`sourceSlug`, `externalId`, `rawJson`/`rawText`), los
+siguientes campos **opcionales** que el `staging_exporter` de VZLA_DEDUP usa para
+deduplicar **entre fuentes**. Cada uno se persiste 1:1 en su columna; omitirlos no
+cambia el comportamiento (compatibilidad hacia atrás). La idempotencia sigue siendo
+por `(scraper_id, external_id)`: re-enviar el mismo `externalId` del mismo scraper
+devuelve `200` con `duplicate: true` y no inserta una segunda fila.
+
+| Body (camelCase) | Columna | Tipo | Notas |
+|---|---|---|---|
+| `runId` | `run_id` | UUID | corrida del pipeline |
+| `entityType` | `entity_type` | enum | `event` \| `acopio` \| `person` |
+| `dedupHash` | `dedup_hash` | hex ≤64 | fingerprint de identidad |
+| `dedupVersion` | `dedup_version` | texto | versión del algoritmo |
+| `blockKeys` | `block_keys` | array de texto | claves de bloqueo |
+| `contentHash` | `content_hash` | hex ≤64 | hash del contenido normalizado |
+| `sourceRecordId` | `source_record_id` | texto | id en la fuente original |
+| `sourceUrl` | `source_url` | URL | URL del registro en la fuente |
+| `parserVersion` | `parser_version` | texto | versión del parser |
+| `normalizerVersion` | `normalizer_version` | texto | versión del normalizador |
+| `rawArtifactId` | `raw_artifact_id` | UUID | artefacto crudo de origen |
+
+> Las columnas de dedup son **internas**: `GET /api/aportes` mantiene sus columnas
+> públicas y no las expone. La columna `consolidated_at` existe pero la escribe el
+> proceso de consolidación (otro spec), no la ingesta.
+
+```bash
+curl -X POST http://localhost:3000/api/aportes \
+  -H "x-api-key: TU_API_KEY" -H "content-type: application/json" \
+  -d '{"sourceSlug":"funvisis","externalId":"<fingerprint>","entityType":"event",
+       "dedupHash":"<64hex>","dedupVersion":"v1","blockKeys":["edo-yaracuy"],
+       "rawJson":{"...":"..."}}'   # 201 nuevo; repetir => 200 duplicate
+```
+
+## `GET` / `PUT /api/source-watermarks/{slug}`
+
+Marca por fuente (`source_watermarks`) del último registro procesado, para que el
+exporter no re-procese lo ya enviado. Auth `x-api-key`. La fuente debe pertenecer al
+scraper (mismo patrón de ownership que `POST /api/aportes`); fuente
+ajena/inexistente → `403`.
+
+- **`GET /api/source-watermarks/{slug}`** → `200 { "sourceSlug": "...", "watermarkAt": "<ISO>" }`.
+  Si la fuente existe pero no tiene fila, devuelve el default `1970-01-01T00:00:00Z`.
+- **`PUT /api/source-watermarks/{slug}`** con body `{ "watermarkAt": "<ISO>" }` (ISO
+  8601 UTC con offset) → upsert; `200` con el valor guardado. Body inválido → `422`.
+
+```bash
+# leer (default si no hay fila)
+curl http://localhost:3000/api/source-watermarks/funvisis -H "x-api-key: TU_API_KEY"
+# actualizar al terminar un batch OK
+curl -X PUT http://localhost:3000/api/source-watermarks/funvisis \
+  -H "x-api-key: TU_API_KEY" -H "content-type: application/json" \
+  -d '{"watermarkAt":"2026-06-28T00:00:00Z"}'
+```
+
+---
+
 ## Códigos de error
 
 | Código | Significado |
 |---|---|
 | `400` | El cuerpo no es JSON válido. |
 | `401` | API key ausente o inválida. |
+| `403` | La fuente no existe o no pertenece al scraper (aportes / watermarks). |
 | `404` | Una FK del payload no existe. La respuesta incluye `field`. |
 | `422` | Contrato inválido. Incluye `issues[]` con `path` y `message`. |
 | `500` | Error interno. |
