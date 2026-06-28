@@ -42,6 +42,7 @@ export type Database = {
           contact_hmac: string | null
           contact_masked: string | null
           current_load: number | null
+          dedup_hash: string | null
           event_id: string
           last_verified_at: string | null
           location: Json | null
@@ -57,6 +58,7 @@ export type Database = {
           contact_hmac?: string | null
           contact_masked?: string | null
           current_load?: number | null
+          dedup_hash?: string | null
           event_id: string
           last_verified_at?: string | null
           location?: Json | null
@@ -72,6 +74,7 @@ export type Database = {
           contact_hmac?: string | null
           contact_masked?: string | null
           current_load?: number | null
+          dedup_hash?: string | null
           event_id?: string
           last_verified_at?: string | null
           location?: Json | null
@@ -181,9 +184,127 @@ export type Database = {
           },
         ]
       }
+      dedup_candidates: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          decision: string
+          event_id: string
+          left_person: string
+          priority: string
+          reasons: Json | null
+          right_person: string
+          score: number
+        }
+        Insert: {
+          candidate_id?: string
+          created_at?: string
+          decision?: string
+          event_id: string
+          left_person: string
+          priority: string
+          reasons?: Json | null
+          right_person: string
+          score: number
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          decision?: string
+          event_id?: string
+          left_person?: string
+          priority?: string
+          reasons?: Json | null
+          right_person?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dedup_candidates_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "dedup_candidates_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_serving_events"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "dedup_candidates_left_person_fkey"
+            columns: ["left_person"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["person_record_id"]
+          },
+          {
+            foreignKeyName: "dedup_candidates_left_person_fkey"
+            columns: ["left_person"]
+            isOneToOne: false
+            referencedRelation: "public_serving_persons"
+            referencedColumns: ["person_record_id"]
+          },
+          {
+            foreignKeyName: "dedup_candidates_right_person_fkey"
+            columns: ["right_person"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["person_record_id"]
+          },
+          {
+            foreignKeyName: "dedup_candidates_right_person_fkey"
+            columns: ["right_person"]
+            isOneToOne: false
+            referencedRelation: "public_serving_persons"
+            referencedColumns: ["person_record_id"]
+          },
+        ]
+      }
+      dedup_decisions: {
+        Row: {
+          aporte_id: string | null
+          canonical_id: string | null
+          decided_at: string
+          decision: string
+          entity_type: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          aporte_id?: string | null
+          canonical_id?: string | null
+          decided_at?: string
+          decision: string
+          entity_type: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          aporte_id?: string | null
+          canonical_id?: string | null
+          decided_at?: string
+          decision?: string
+          entity_type?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dedup_decisions_aporte_id_fkey"
+            columns: ["aporte_id"]
+            isOneToOne: false
+            referencedRelation: "aportes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           affected_states: Json | null
+          dedup_hash: string | null
           depth_km: number | null
           event_id: string
           event_type: string
@@ -195,6 +316,7 @@ export type Database = {
         }
         Insert: {
           affected_states?: Json | null
+          dedup_hash?: string | null
           depth_km?: number | null
           event_id?: string
           event_type: string
@@ -206,6 +328,7 @@ export type Database = {
         }
         Update: {
           affected_states?: Json | null
+          dedup_hash?: string | null
           depth_km?: number | null
           event_id?: string
           event_type?: string
