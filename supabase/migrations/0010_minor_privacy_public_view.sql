@@ -7,8 +7,9 @@
 -- Reglas de reduccion:
 --   full_name, alternate_names  → NULL
 --   cedula_hmac, cedula_masked  → NULL
---   last_known_location         → solo estado (primer segmento antes de coma)
+--   last_known_location         → solo estado (jsonb-safe, extrae clave "estado")
 --   age_range, sex, status, verification_status, confidence_score → visibles
+--   is_minor                    → NO se expone como columna (solo CASE interno)
 
 create or replace view public.public_serving_persons
 with (security_invoker = true)
@@ -26,19 +27,18 @@ select
   age_range,
   sex,
 
-  -- Ubicacion: solo estado cuando is_minor = true
+  -- Ubicacion: solo estado cuando is_minor = true (jsonb-safe)
   case
-    when is_minor = true and last_known_location like '%,%'
-      then trim(split_part(last_known_location, ',', 2))
+    when is_minor = true and last_known_location ? 'estado'
+      then jsonb_build_object('estado', last_known_location -> 'estado')
     when is_minor = true
-      then last_known_location
+      then null
     else last_known_location
   end as last_known_location,
 
   status,
   verification_status,
   confidence_score,
-  is_minor,
   source_url
 from public.persons;
 

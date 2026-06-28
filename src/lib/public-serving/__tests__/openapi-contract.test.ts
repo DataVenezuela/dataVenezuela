@@ -21,6 +21,7 @@ describe("public serving OpenAPI contract", () => {
     const forbiddenFields = [
       "cedula_hmac",
       "contact_hmac",
+      "is_minor",
       "raw_json",
       "raw_text",
       "scraper_id",
