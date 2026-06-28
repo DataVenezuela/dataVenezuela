@@ -13,6 +13,15 @@ export const emptyToUndefined = (v: unknown) =>
 
 export const optionalText = z.preprocess(emptyToUndefined, z.string().optional());
 const optionalUrl = z.preprocess(emptyToUndefined, z.url().optional());
+const optionalUuid = z.preprocess(emptyToUndefined, z.uuid().optional());
+// hash en hex (SHA-256, ≤64 chars). El exporter lo precalcula; aquí solo formato.
+const optionalHash = z.preprocess(
+  emptyToUndefined,
+  z
+    .string()
+    .regex(/^[0-9a-f]{1,64}$/, "debe ser hex (≤64 caracteres)")
+    .optional(),
+);
 
 // ---------------------------------------------------------------------------
 // sources — alta/edición de fuentes (acción de admin)
@@ -40,6 +49,22 @@ export const aporteInputSchema = z
     sourceSlug: optionalText,
     rawJson: z.unknown().optional(), // cualquier JSON (objeto, arreglo, escalar)
     rawText: optionalText,
+    // Campos de staging para dedup cross-source (los manda el staging_exporter de
+    // VZLA_DEDUP). Todos opcionales: la ingesta sin ellos sigue funcionando igual.
+    runId: optionalUuid,
+    entityType: z.preprocess(
+      emptyToUndefined,
+      z.enum(["event", "acopio", "person"]).optional(),
+    ),
+    dedupHash: optionalHash,
+    dedupVersion: optionalText,
+    blockKeys: z.preprocess(emptyToUndefined, z.array(z.string()).optional()),
+    contentHash: optionalHash,
+    sourceRecordId: optionalText,
+    sourceUrl: optionalUrl,
+    parserVersion: optionalText,
+    normalizerVersion: optionalText,
+    rawArtifactId: optionalUuid,
   })
   .refine((d) => d.sourceId !== undefined || d.sourceSlug !== undefined, {
     message: "Se requiere source_id o source_slug",
@@ -53,3 +78,13 @@ export const aporteInputSchema = z
   );
 
 export type AporteInput = z.infer<typeof aporteInputSchema>;
+
+// ---------------------------------------------------------------------------
+// source_watermarks — marca por fuente del último registro procesado (PUT).
+// `watermarkAt` debe ser ISO 8601 con offset (UTC), como el resto del contrato.
+// ---------------------------------------------------------------------------
+export const watermarkInputSchema = z.object({
+  watermarkAt: z.iso.datetime({ offset: true }),
+});
+
+export type WatermarkInput = z.infer<typeof watermarkInputSchema>;
