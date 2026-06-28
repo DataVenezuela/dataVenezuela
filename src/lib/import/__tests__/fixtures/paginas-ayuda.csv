@@ -1,0 +1,10 @@
+FALSE,Nombre,URL,Quién la creó,Para qué existe,Categoría
+,"Ahorita es un caos, pero lo limpio luego!",,,,
+FALSE,Página descartada,https://descartada.example.com,,No incluir,Donaciones
+TRUE,Bomberos de la UCV,https://donorbox.org/emergency-relief,La Fundación de Bomberos de la UCV,Equipos de rescate críticos en Caracas,"Donaciones, Edificios"
+TRUE,Dona con Yummy,https://dona.yummyrides.com/,,Plataforma de donaciones,Donaciones
+TRUE,  VeneHelp  ,https://directorioterremotovenezuela.org/,,Directorio que agrupa sitios y mapas,
+TRUE,Sin URL,,Alguien,Falta el enlace,Donaciones
+TRUE,URL mala,example.org,,Sin esquema http,Mapas
+TRUE,,https://anonima.example.com,,Sin nombre,Otros
+TRUE,Bomberos de la UCV,https://donorbox.org/emergency-relief,La Fundación de Bomberos de la UCV,Equipos de rescate críticos en Caracas,"Donaciones, Edificios"
