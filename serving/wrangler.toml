@@ -1,0 +1,12 @@
+name = "datavenezuela-serving"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# El binding D1 se conecta en SPEC-0002 (consume el artefacto de PR #10).
+# Tras `wrangler d1 create dv_public`, descomentar y completar database_id.
+# Mientras tanto, el Worker corre sin D1 y /healthz responde { ok: true }.
+#
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "dv_public"
+# database_id = "TODO"
