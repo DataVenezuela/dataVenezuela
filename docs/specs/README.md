@@ -36,6 +36,8 @@ Estado: `propuesto` · `en curso` · `hecho`.
 | 0010 | PII fix: lectura de aportes (quitar raw_* del publico) | — | propuesto |
 | 0011 | PII fix: person_notes/sources/photos sin anon directo | — | propuesto |
 | 0012 | Decision is_minor en la proyeccion | — | propuesto |
+| 0013 | Ingesta de staging para dedup cross-source (aportes + watermarks) | — | hecho |
+| [0014](./0014-dedup-consolidation.md) | Esquema de consolidacion para el dedup job | 0013 | en curso |
 
 Cross-repo (fuera de este repo): mapear enums ES->EN en el pipeline de VZLA_DEDUP
 antes de la ingesta.
