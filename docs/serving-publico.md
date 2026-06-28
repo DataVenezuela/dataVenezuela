@@ -1,5 +1,11 @@
 # Serving publico Worker/D1
 
+> Esta es la **guia de implementacion**. La decision de arquitectura (el porque,
+> alternativas y consecuencias) vive en
+> [`docs/adr/0001-arquitectura-serving-publico.md`](./adr/0001-arquitectura-serving-publico.md).
+> El plan por fases de las piezas pendientes esta en
+> [`docs/serving-implementation-plan.md`](./serving-implementation-plan.md).
+
 Este repo es el plano interno de datos: Supabase/Postgres guarda el modelo
 normalizado y recibe escrituras de los scrapers. El plano publico debe quedar
 separado: un Worker de Cloudflare consulta un artefacto D1/SQLite de solo lectura
