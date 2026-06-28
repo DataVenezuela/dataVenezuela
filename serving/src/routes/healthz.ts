@@ -22,8 +22,9 @@ export async function handleHealthz(env: Env): Promise<HealthResponse> {
       if (row?.value) {
         body.snapshot_version = row.value;
       }
-    } catch {
+    } catch (error) {
       // Sin artefacto cargado o sin tabla: el healthz sigue respondiendo ok.
+      console.error("Error occurred while fetching snapshot version", error);
     }
   }
 
