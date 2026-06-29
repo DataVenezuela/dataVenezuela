@@ -80,7 +80,7 @@ export const aporteInputSchema = z
 export type AporteInput = z.infer<typeof aporteInputSchema>;
 
 // ---------------------------------------------------------------------------
-// quarantine — registros no procesables (autenticada con x-api-key). SPEC-0015.
+// quarantine — registros no procesables (autenticada con x-api-key). SPEC-0016.
 // El scraper preserva aquí lo que no pudo procesar; el preview ya viene redactado.
 // Los enums deben coincidir con los CHECK de `quarantine_records` (0011).
 // ---------------------------------------------------------------------------

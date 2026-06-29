@@ -1,4 +1,4 @@
--- Quarantine DB — registros no procesables (SPEC-0015, VZLA_DEDUP #88)
+-- Quarantine DB — registros no procesables (SPEC-0016, VZLA_DEDUP #88)
 --
 -- Cuando el pipeline no puede procesar un registro (parser ausente, schema
 -- invalido, PII no redactable, etc.) NO se descarta: se preserva aqui, en una

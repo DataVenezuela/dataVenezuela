@@ -1,4 +1,4 @@
-# SPEC-0015 — Quarantine DB (registros no procesables)
+# SPEC-0016 — Quarantine DB (registros no procesables)
 
 | Campo | Valor |
 |---|---|

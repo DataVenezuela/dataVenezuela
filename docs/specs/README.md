@@ -38,7 +38,7 @@ Estado: `propuesto` · `en curso` · `hecho`.
 | 0012 | Decision is_minor en la proyeccion | — | propuesto |
 | 0013 | Ingesta de staging para dedup cross-source (aportes + watermarks) | — | hecho |
 | [0014](./0014-dedup-consolidation.md) | Esquema de consolidacion para el dedup job | 0013 | en curso |
-| [0015](./0015-quarantine-records.md) | Quarantine DB + POST /api/quarantine (VZLA_DEDUP #88) | 0013 | en curso |
+| [0016](./0016-quarantine-records.md) | Quarantine DB + POST /api/v1/quarantine (VZLA_DEDUP #88) | 0013 | en curso |
 
 Cross-repo (fuera de este repo): mapear enums ES->EN en el pipeline de VZLA_DEDUP
 antes de la ingesta.
