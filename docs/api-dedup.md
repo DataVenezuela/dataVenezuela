@@ -187,6 +187,15 @@ No tiene endpoint público en esta fase.
 Campos clave: `artifact_id`, `source_slug`, `fetched_at`, `content_hash`, `r2_url`,
 `pii_status`, `ingestion_status`.
 
+## `ingestion_runs`
+
+Tabla interna de observabilidad para los jobs de ingestion/consolidacion que corren
+en `VZLA_DEDUP` (GitHub Actions). Guarda estado por corrida, conteos y link al log
+del CI (`ci_run_url`). Este repo no define workflows para esos jobs.
+
+Campos clave: `run_id`, `source_slug`, `status`, `started_at`, `finished_at`,
+`records_in`, `records_new`, `records_dup`, `errors`, `ci_run_url`.
+
 ## `GET` / `PUT /api/source-watermarks/{slug}`
 
 Marca por fuente (`source_watermarks`) del último registro procesado, para que el
