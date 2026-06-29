@@ -38,7 +38,8 @@ Fuente de verdad: `supabase/migrations/0009_dedup_consolidation.sql`.
 - `dedup_candidates`: `candidate_id` (PK), `event_id` → `events`, `left_person` /
   `right_person` → `persons`, `score numeric(4,3)` ∈ [0,1], `reasons jsonb`,
   `priority` (`high`|`medium`|`low`), `decision` (`pending`|`merged`|`rejected`|
-  `deferred`, default `pending`), `created_at`. `UNIQUE (left_person, right_person)`.
+  `deferred`, default `pending`), `created_at`. No permite pares consigo mismos y usa
+  índice único canónico para evitar duplicados invertidos `(A,B)` / `(B,A)`.
 - `dedup_decisions`: `id` (PK), `aporte_id` → `aportes` (`on delete set null`),
   `entity_type text`, `decision` (`merged`|`discarded`|`promoted`|`candidate`),
   `reason text`, `canonical_id uuid` (polimórfico por `entity_type`, **sin FK**),
@@ -54,6 +55,7 @@ Fuente de verdad: `supabase/migrations/0009_dedup_consolidation.sql`.
 - [ ] El UNIQUE sobre `dedup_hash` permite el upsert atómico (insertar dos veces el
       mismo `dedup_hash` con `ON CONFLICT DO NOTHING` no crea dos filas).
 - [ ] Las tablas nuevas tienen RLS + grants (service_role total, admin lee).
+- [ ] `dedup_candidates` rechaza `(A,A)` y no permite duplicados invertidos.
 - [ ] `src/lib/database.types.ts` regenerado incluye las columnas y tablas nuevas.
 - [ ] Docs del esquema actualizadas (`docs/api-dedup.md`).
 

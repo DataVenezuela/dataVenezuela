@@ -1,0 +1,12 @@
+name = "datavenezuela-serving"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+account_id = "6da1df16e7deb65edbfbc69921d0b23f"
+
+# Artefacto publico de solo lectura. Se materializa desde Supabase con el export
+# de PR #10 (scripts/export-public-serving-d1.mjs). Mientras la D1 este vacia,
+# /healthz responde { ok: true } sin snapshot_version.
+[[d1_databases]]
+binding = "DB"
+database_name = "dv_public"
+database_id = "71efedc1-e827-447c-b641-aeb2bf76812b"

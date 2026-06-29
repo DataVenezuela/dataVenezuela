@@ -47,12 +47,14 @@ create table public.dedup_candidates (
   decision      text not null default 'pending'
                   check (decision in ('pending', 'merged', 'rejected', 'deferred')),
   created_at    timestamptz not null default now(),
-  unique (left_person, right_person)
+  check (left_person <> right_person)
 );
 
 create index dedup_candidates_event_id_idx     on public.dedup_candidates (event_id);
 create index dedup_candidates_left_person_idx  on public.dedup_candidates (left_person);
 create index dedup_candidates_right_person_idx on public.dedup_candidates (right_person);
+create unique index dedup_candidates_pair_uniq
+  on public.dedup_candidates (least(left_person, right_person), greatest(left_person, right_person));
 
 -- ----------------------------------------------------------------------------
 -- dedup_decisions: auditoría de decisiones de consolidación

@@ -44,10 +44,11 @@ Supabase directamente.
 - Plan de implementacion: `docs/serving-implementation-plan.md`
 - Revision de PII: `docs/serving-pii-review.md`
 
-**Acceso:** la **escritura** (ingesta) requiere `x-api-key`; la **lectura** de
-aportes es **pública** vía los route handlers (cliente service-role, columnas
-seguras). Las acciones internas (gestión de scrapers/fuentes/keys) validan rol en
-código; RLS es la red de seguridad para usuarios autenticados.
+**Acceso:** la **escritura** (ingesta) requiere `x-api-key`. La consulta publica
+del modelo deduplicado vive en Worker/D1; los route handlers de este repo quedan
+para ingesta, operaciones internas y compatibilidad con lecturas de aportes.
+Las acciones internas (gestión de scrapers/fuentes/keys) validan rol en código;
+RLS es la red de seguridad para usuarios autenticados.
 
 ## Puesta en marcha
 

@@ -219,7 +219,7 @@ no se exponen a `anon`. Fuente de verdad: `supabase/migrations/0009_dedup_consol
   |---|---|---|
   | `candidate_id` | uuid PK | |
   | `event_id` | uuid → `events` | |
-  | `left_person` / `right_person` | uuid → `persons` | `UNIQUE (left_person, right_person)` |
+  | `left_person` / `right_person` | uuid → `persons` | sin self-pair; índice único canónico evita `(A,B)` y `(B,A)` |
   | `score` | numeric(4,3) | en `[0.000, 1.000]` |
   | `reasons` | jsonb | señales que motivaron el candidato |
   | `priority` | enum | ver tabla de enums |
