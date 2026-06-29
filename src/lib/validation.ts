@@ -100,7 +100,10 @@ export const quarantineInputSchema = z.object({
   // run_id de la corrida del pipeline (se comparte con el aporte de staging).
   runId: z.uuid("run_id debe ser un UUID válido"),
   sourceSlug: z.string().trim().min(1, "source_slug es obligatorio"),
-  sourceUrl: optionalUrl,
+  // Trazabilidad libre: para fuentes manual_file/PDF el origen es una RUTA, no una
+  // URL. No exigimos formato URL: rechazar el registro por eso seria perderlo, que
+  // es justo lo que la cuarentena evita (#88). Es solo una pista para el revisor.
+  sourceUrl: optionalText,
   reasonCode: quarantineReasonCodeEnum,
   reasonDetail: optionalText,
   riskLevel: quarantineRiskLevelEnum,

@@ -79,6 +79,14 @@ describe("quarantineInputSchema", () => {
     expect(r.success).toBe(true);
   });
 
+  it("acepta sourceUrl como ruta de archivo (manual_file, trazabilidad libre)", () => {
+    const r = quarantineInputSchema.safeParse({
+      ...base,
+      sourceUrl: "/tmp/datos_sin_parser.txt",
+    });
+    expect(r.success).toBe(true);
+  });
+
   it("rechaza reasonCode fuera del enum", () => {
     const r = quarantineInputSchema.safeParse({ ...base, reasonCode: "lo_que_sea" });
     expect(r.success).toBe(false);

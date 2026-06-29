@@ -58,8 +58,10 @@ error interno.
 `ambiguous_manual_review`}. `riskLevel` ∈ {`low`, `medium`, `high`}.
 
 `source_slug` lleva FK a `sources(slug)`; el servicio valida que la fuente
-pertenezca al scraper autenticado (igual que `createAporte`). Solo se guarda
-preview redactado + hash + metadata: **nunca PII en claro**.
+pertenezca al scraper autenticado (igual que `createAporte`). `sourceUrl` es
+trazabilidad libre (texto): para fuentes `manual_file`/PDF el origen es una RUTA,
+no una URL, y no se rechaza por formato (rechazar seria perder el registro). Solo
+se guarda preview redactado + hash + metadata: **nunca PII en claro**.
 
 Columnas que gestiona el backend (no el scraper): `quarantine_id`, `review_status`
 (default `pending`), `review_decision`, `retention_until`, `destroyed_at`,
