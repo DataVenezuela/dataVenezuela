@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { aporteInputSchema, watermarkInputSchema } from "@/lib/validation";
+import {
+  aporteInputSchema,
+  quarantineInputSchema,
+  watermarkInputSchema,
+} from "@/lib/validation";
 
 const UUID = "123e4567-e89b-42d3-a456-426614174000";
 const HEX = "a".repeat(64);
@@ -67,5 +71,23 @@ describe("watermarkInputSchema", () => {
   it("rechaza ausencia de watermarkAt", () => {
     const r = watermarkInputSchema.safeParse({});
     expect(r.success).toBe(false);
+  });
+});
+
+describe("quarantineInputSchema", () => {
+  it("rechaza campos obligatorios vacíos con mensajes específicos", () => {
+    const r = quarantineInputSchema.safeParse({
+      sourceSlug: "",
+      reasonCode: "  ",
+      riskLevel: "low",
+    });
+
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.error.issues.map((issue) => issue.message)).toEqual([
+        "sourceSlug es obligatorio",
+        "reasonCode es obligatorio",
+      ]);
+    }
   });
 });
