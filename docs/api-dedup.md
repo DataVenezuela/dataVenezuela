@@ -163,11 +163,12 @@ devuelve `200` con `duplicate: true` y no inserta una segunda fila.
 | `sourceUrl` | `source_url` | URL | URL del registro en la fuente |
 | `parserVersion` | `parser_version` | texto | versión del parser |
 | `normalizerVersion` | `normalizer_version` | texto | versión del normalizador |
-| `rawArtifactId` | `raw_artifact_id` | UUID | artefacto crudo de origen |
+| `rawArtifactId` | `raw_artifact_id` | UUID | FK a `raw_artifacts.artifact_id` |
 
 > Las columnas de dedup son **internas**: `GET /api/aportes` mantiene sus columnas
 > públicas y no las expone. La columna `consolidated_at` existe pero la escribe el
-> proceso de consolidación (otro spec), no la ingesta.
+> proceso de consolidación (otro spec), no la ingesta. Si se envía `rawArtifactId`,
+> el artifact debe existir primero en `raw_artifacts`.
 
 ```bash
 curl -X POST http://localhost:3000/api/aportes \
@@ -176,6 +177,15 @@ curl -X POST http://localhost:3000/api/aportes \
        "dedupHash":"<64hex>","dedupVersion":"v1","blockKeys":["edo-yaracuy"],
        "rawJson":{"...":"..."}}'   # 201 nuevo; repetir => 200 duplicate
 ```
+
+## `raw_artifacts`
+
+Tabla interna de metadata para payloads redactados guardados fuera de Postgres
+(por ejemplo R2). Cierra la trazabilidad `aporte -> raw_artifact -> objeto externo`.
+No tiene endpoint público en esta fase.
+
+Campos clave: `artifact_id`, `source_slug`, `fetched_at`, `content_hash`, `r2_url`,
+`pii_status`, `ingestion_status`.
 
 ## `GET` / `PUT /api/source-watermarks/{slug}`
 
