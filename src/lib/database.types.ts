@@ -169,6 +169,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "aportes_raw_artifact_id_fkey"
+            columns: ["raw_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "raw_artifacts"
+            referencedColumns: ["artifact_id"]
+          },
+          {
             foreignKeyName: "aportes_scraper_id_fkey"
             columns: ["scraper_id"]
             isOneToOne: false
@@ -648,6 +655,71 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      raw_artifacts: {
+        Row: {
+          artifact_id: string
+          byte_size: number | null
+          content_hash: string
+          content_type: string | null
+          created_at: string
+          fetched_at: string
+          http_status: number | null
+          ingestion_status: string
+          parser_version: string | null
+          pii_findings_summary: Json | null
+          pii_status: string
+          r2_url: string
+          raw_record_hash: string | null
+          run_id: string | null
+          source_slug: string
+          source_url: string | null
+        }
+        Insert: {
+          artifact_id?: string
+          byte_size?: number | null
+          content_hash: string
+          content_type?: string | null
+          created_at?: string
+          fetched_at: string
+          http_status?: number | null
+          ingestion_status?: string
+          parser_version?: string | null
+          pii_findings_summary?: Json | null
+          pii_status: string
+          r2_url: string
+          raw_record_hash?: string | null
+          run_id?: string | null
+          source_slug: string
+          source_url?: string | null
+        }
+        Update: {
+          artifact_id?: string
+          byte_size?: number | null
+          content_hash?: string
+          content_type?: string | null
+          created_at?: string
+          fetched_at?: string
+          http_status?: number | null
+          ingestion_status?: string
+          parser_version?: string | null
+          pii_findings_summary?: Json | null
+          pii_status?: string
+          r2_url?: string
+          raw_record_hash?: string | null
+          run_id?: string | null
+          source_slug?: string
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raw_artifacts_source_slug_fkey"
+            columns: ["source_slug"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["slug"]
+          },
+        ]
       }
       scraper_applications: {
         Row: {
