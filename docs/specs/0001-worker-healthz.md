@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | en curso |
+| Estado | hecho |
 | Depende de | — |
 | ADR / motivacion | `adr/0001`, `serving-implementation-plan.md` (Fase 2) |
-| PR | <pendiente> |
+| PR | #13 |
 
 ## Contexto
 
@@ -45,14 +45,14 @@ Comportamiento:
 
 ## Criterios de aceptacion
 
-- [ ] `GET /healthz` responde `200` con `{ "ok": true }` cuando no hay D1.
-- [ ] Con un D1 que tiene `snapshot_metadata`, la respuesta incluye
+- [x] `GET /healthz` responde `200` con `{ "ok": true }` cuando no hay D1.
+- [x] Con un D1 que tiene `snapshot_metadata`, la respuesta incluye
       `snapshot_version` (string).
-- [ ] La respuesta no incluye campos fuera de `HealthResponse`
+- [x] La respuesta no incluye campos fuera de `HealthResponse`
       (`additionalProperties: false`).
-- [ ] Rutas desconocidas responden `404`.
-- [ ] `cd serving && npm test` pasa.
-- [ ] El handler es una funcion pura testeable sin el runtime de Workers.
+- [x] Rutas desconocidas responden `404`.
+- [x] `cd serving && npm test` pasa.
+- [x] El handler es una funcion pura testeable sin el runtime de Workers.
 
 ## Fuera de alcance
 

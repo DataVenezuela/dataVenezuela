@@ -24,7 +24,7 @@ Estado: `propuesto` · `en curso` · `hecho`.
 
 | Spec | Titulo | Depende de | Estado |
 |---|---|---|---|
-| [0001](./0001-worker-healthz.md) | Worker skeleton + /healthz | — | en curso |
+| [0001](./0001-worker-healthz.md) | Worker skeleton + /healthz | — | hecho |
 | 0002 | D1 binding + carga del artefacto (consume PR #10) | PR #10 | propuesto |
 | 0003 | GET /v1/events (status, limit<=20) | 0001 | propuesto |
 | 0004 | GET /v1/acopio (estado, needs, status, limit<=20) | 0001 | propuesto |
@@ -37,7 +37,8 @@ Estado: `propuesto` · `en curso` · `hecho`.
 | 0011 | PII fix: person_notes/sources/photos sin anon directo | — | propuesto |
 | 0012 | Decision is_minor en la proyeccion | — | propuesto |
 | 0013 | Ingesta de staging para dedup cross-source (aportes + watermarks) | — | hecho |
-| [0014](./0014-dedup-consolidation.md) | Esquema de consolidacion para el dedup job | 0013 | en curso |
+| [0014](./0014-dedup-consolidation.md) | Esquema de consolidacion para el dedup job | 0013 | hecho |
+| [0015](./0015-admin-self-api-key.md) | Admin auto-genera su propia API key | — | hecho |
 
 Cross-repo (fuera de este repo): mapear enums ES->EN en el pipeline de VZLA_DEDUP
 antes de la ingesta.
