@@ -37,6 +37,9 @@ ausencia o `null`.
 | `person_sources.trust_tier` | `1` (oficial), `2` (ONG), `3` (social/anónimo) |
 | `acopio_centers.status` | `active`, `full`, `closed`, `unverified` |
 | `acopio_centers.needs[]` | `agua`, `alimentos`, `medicamentos`, `colchonetas`, `ropa`, `calzado`, `higiene`, `pañales`, `leche_formula`, `generador`, `combustible`, `herramientas`, `voluntarios`, `transporte`, `otro` — cualquier valor fuera de la lista se normaliza a `otro` |
+| `dedup_candidates.priority` | `high`, `medium`, `low` |
+| `dedup_candidates.decision` | `pending` (default), `merged`, `rejected`, `deferred` |
+| `dedup_decisions.decision` | `merged`, `discarded`, `promoted`, `candidate` |
 
 ---
 
@@ -194,6 +197,46 @@ curl -X PUT http://localhost:3000/api/source-watermarks/funvisis \
   -H "x-api-key: TU_API_KEY" -H "content-type: application/json" \
   -d '{"watermarkAt":"2026-06-28T00:00:00Z"}'
 ```
+
+---
+
+## Estructuras de consolidación (SPEC-0014)
+
+Estas tablas/columnas no tienen endpoint de ingesta: las usa el **consolidation job**
+(proceso externo del pipeline) que lee `aportes WHERE consolidated_at IS NULL`. Son
+**internas** — `service_role` tiene acceso total y un **admin** logueado puede leerlas;
+no se exponen a `anon`. Fuente de verdad: `supabase/migrations/0009_dedup_consolidation.sql`.
+
+- **`events.dedup_hash` / `acopio_centers.dedup_hash`** (`varchar(64)`, nullable): con
+  índice **UNIQUE** (`events_dedup_uniq`, `acopio_centers_dedup_uniq`). Habilitan el
+  **auto-merge exacto** vía upsert atómico `INSERT ... ON CONFLICT (dedup_hash)`. El
+  UNIQUE de Postgres admite múltiples `NULL`, así que solo deduplica filas que ya
+  tienen hash.
+
+- **`dedup_candidates`** — pares de persona para **revisión humana** (nunca auto-merge):
+
+  | Columna | Tipo | Notas |
+  |---|---|---|
+  | `candidate_id` | uuid PK | |
+  | `event_id` | uuid → `events` | |
+  | `left_person` / `right_person` | uuid → `persons` | sin self-pair; índice único canónico evita `(A,B)` y `(B,A)` |
+  | `score` | numeric(4,3) | en `[0.000, 1.000]` |
+  | `reasons` | jsonb | señales que motivaron el candidato |
+  | `priority` | enum | ver tabla de enums |
+  | `decision` | enum | default `pending` |
+  | `created_at` | timestamptz | |
+
+- **`dedup_decisions`** — auditoría de las decisiones de consolidación:
+
+  | Columna | Tipo | Notas |
+  |---|---|---|
+  | `id` | uuid PK | |
+  | `aporte_id` | uuid → `aportes` | `on delete set null` |
+  | `entity_type` | text | `event` / `person` / `acopio`… |
+  | `decision` | enum | ver tabla de enums |
+  | `reason` | text | |
+  | `canonical_id` | uuid | ID canónico **polimórfico** por `entity_type`; sin FK a propósito |
+  | `decided_at` | timestamptz | |
 
 ---
 
