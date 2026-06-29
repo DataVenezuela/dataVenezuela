@@ -94,16 +94,16 @@ export type WatermarkInput = z.infer<typeof watermarkInputSchema>;
 // El payload debe venir redactado; nunca PII cruda.
 // ---------------------------------------------------------------------------
 export const quarantineInputSchema = z.object({
-  sourceSlug: z.preprocess(
-    emptyToUndefined,
-    z.string().trim().min(1, "sourceSlug es obligatorio"),
-  ),
+  sourceSlug: z
+    .string({ error: "sourceSlug es obligatorio" })
+    .trim()
+    .min(1, "sourceSlug es obligatorio"),
   runId: optionalUuid,
   sourceUrl: optionalUrl,
-  reasonCode: z.preprocess(
-    emptyToUndefined,
-    z.string().trim().min(1, "reasonCode es obligatorio"),
-  ),
+  reasonCode: z
+    .string({ error: "reasonCode es obligatorio" })
+    .trim()
+    .min(1, "reasonCode es obligatorio"),
   reasonDetail: optionalText,
   riskLevel: z.enum(["low", "medium", "high"]),
   payloadPreviewRedacted: optionalText,
