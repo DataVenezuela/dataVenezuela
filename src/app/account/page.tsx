@@ -6,6 +6,7 @@ import { roleLabels, formatDate } from "@/lib/labels";
 import { card, btnSecondary, btnDanger } from "@/lib/ui";
 import { logout } from "../admin/actions";
 import { CreateKeyForm } from "./CreateKeyForm";
+import { RequestAdminKeyForm } from "./RequestAdminKeyForm";
 import { revokeApiKeyAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export default async function AccountPage() {
     last_used_at: string | null;
     created_at: string;
   }[] = [];
-  if (isApprovedScraper) {
+  if (isApprovedScraper || isAdmin) {
     const { data: srcRows } = await supabase
       .from("sources")
       .select("id, name, slug")
@@ -100,20 +101,25 @@ export default async function AccountPage() {
         </div>
       )}
 
-      {/* Fuentes y API keys (scraper aprobado) */}
-      {isApprovedScraper && (
+      {/* Fuentes y API keys (scraper aprobado o admin) */}
+      {(isApprovedScraper || isAdmin) && (
         <>
           <section className={`mt-6 ${card}`}>
             <h2 className="font-semibold">Mis fuentes</h2>
             <p className="mt-1 text-sm text-gray-600">
-              El equipo te asigna las fuentes. Al subir aportes identifica la
-              fuente con su <code>id</code> (<code>source_id</code>) o su{" "}
-              <code>slug</code> (<code>source_slug</code>).
+              {isAdmin
+                ? "Tu fuente se crea automáticamente al solicitar tu primera API key."
+                : "El equipo te asigna las fuentes."}{" "}
+              Al subir aportes identifica la fuente con su <code>id</code> (
+              <code>source_id</code>) o su <code>slug</code> (
+              <code>source_slug</code>).
             </p>
             <div className="mt-3 space-y-2">
               {sources.length === 0 && (
                 <p className="text-sm text-gray-500">
-                  Aún no tienes fuentes asignadas. Pídele al equipo que cree una.
+                  {isAdmin
+                    ? "Aún no tienes fuente. Se creará al solicitar tu primera API key."
+                    : "Aún no tienes fuentes asignadas. Pídele al equipo que cree una."}
                 </p>
               )}
               {sources.map((s) => (
@@ -147,7 +153,7 @@ export default async function AccountPage() {
               </p>
             </div>
 
-            <CreateKeyForm />
+            {isAdmin ? <RequestAdminKeyForm /> : <CreateKeyForm />}
 
             <div className="space-y-2">
               {keys.length === 0 && (
