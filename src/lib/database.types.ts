@@ -703,6 +703,68 @@ export type Database = {
           },
         ]
       }
+      quarantine_records: {
+        Row: {
+          created_at: string
+          destroyed_at: string | null
+          payload_hash: string | null
+          payload_preview_redacted: string | null
+          pii_findings_summary: Json | null
+          quarantine_id: string
+          reason_code: string
+          reason_detail: string | null
+          retention_until: string | null
+          review_decision: string | null
+          review_status: string
+          risk_level: string
+          run_id: string | null
+          source_slug: string
+          source_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          destroyed_at?: string | null
+          payload_hash?: string | null
+          payload_preview_redacted?: string | null
+          pii_findings_summary?: Json | null
+          quarantine_id?: string
+          reason_code: string
+          reason_detail?: string | null
+          retention_until?: string | null
+          review_decision?: string | null
+          review_status?: string
+          risk_level: string
+          run_id?: string | null
+          source_slug: string
+          source_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          destroyed_at?: string | null
+          payload_hash?: string | null
+          payload_preview_redacted?: string | null
+          pii_findings_summary?: Json | null
+          quarantine_id?: string
+          reason_code?: string
+          reason_detail?: string | null
+          retention_until?: string | null
+          review_decision?: string | null
+          review_status?: string
+          risk_level?: string
+          run_id?: string | null
+          source_slug?: string
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quarantine_records_source_slug_fkey"
+            columns: ["source_slug"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       source_watermarks: {
         Row: {
           source_slug: string
@@ -1073,4 +1135,3 @@ export const Constants = {
     },
   },
 } as const
-

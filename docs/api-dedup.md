@@ -200,6 +200,29 @@ curl -X PUT http://localhost:3000/api/source-watermarks/funvisis \
 
 ---
 
+## `POST /api/v1/quarantine`
+
+Recibe registros que el pipeline no puede procesar automáticamente sin riesgo
+(parser faltante, schema inválido, PII no tratable). Auth `x-api-key`; la fuente debe
+pertenecer al scraper. El payload debe venir **redactado**: este endpoint no acepta
+PII cruda.
+
+Body mínimo:
+
+```json
+{
+  "sourceSlug": "funvisis",
+  "reasonCode": "parser_missing",
+  "riskLevel": "medium",
+  "payloadPreviewRedacted": "fragmento seguro",
+  "payloadHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+```
+
+Respuesta: `201 { "id": "<quarantine_id>", "status": "quarantined" }`.
+
+---
+
 ## Estructuras de consolidación (SPEC-0014)
 
 Estas tablas/columnas no tienen endpoint de ingesta: las usa el **consolidation job**

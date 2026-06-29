@@ -88,3 +88,31 @@ export const watermarkInputSchema = z.object({
 });
 
 export type WatermarkInput = z.infer<typeof watermarkInputSchema>;
+
+// ---------------------------------------------------------------------------
+// quarantine_records — registros que el pipeline no puede procesar con seguridad.
+// El payload debe venir redactado; nunca PII cruda.
+// ---------------------------------------------------------------------------
+export const quarantineInputSchema = z.object({
+  sourceSlug: z.preprocess(
+    emptyToUndefined,
+    z.string().trim().min(1, "sourceSlug es obligatorio"),
+  ),
+  runId: optionalUuid,
+  sourceUrl: optionalUrl,
+  reasonCode: z.preprocess(
+    emptyToUndefined,
+    z.string().trim().min(1, "reasonCode es obligatorio"),
+  ),
+  reasonDetail: optionalText,
+  riskLevel: z.enum(["low", "medium", "high"]),
+  payloadPreviewRedacted: optionalText,
+  payloadHash: optionalHash,
+  piiFindingsSummary: z.unknown().optional(),
+  retentionUntil: z.preprocess(
+    emptyToUndefined,
+    z.iso.datetime({ offset: true }).optional(),
+  ),
+});
+
+export type QuarantineInput = z.infer<typeof quarantineInputSchema>;
