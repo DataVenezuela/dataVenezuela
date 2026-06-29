@@ -7,7 +7,7 @@
 -- Reglas de reduccion:
 --   full_name, alternate_names  → NULL
 --   cedula_hmac, cedula_masked  → NULL
---   last_known_location         → solo estado (jsonb-safe, extrae clave "estado")
+--   last_known_location         → solo estado/state (jsonb-safe)
 --   age_range, sex, status, verification_status, confidence_score → visibles
 --   is_minor                    → NO se expone como columna (solo CASE interno)
 
@@ -19,18 +19,20 @@ select
   event_id,
 
   -- Campos identificables: NULL cuando is_minor = true
-  case when is_minor = true then null else full_name end          as full_name,
+  case when is_minor = true then null::varchar(300) else full_name end as full_name,
   case when is_minor = true then null else alternate_names end    as alternate_names,
-  case when is_minor = true then null else cedula_hmac end        as cedula_hmac,
-  case when is_minor = true then null else cedula_masked end      as cedula_masked,
+  case when is_minor = true then null::varchar(64) else cedula_hmac end as cedula_hmac,
+  case when is_minor = true then null::varchar(15) else cedula_masked end as cedula_masked,
 
   age_range,
   sex,
 
-  -- Ubicacion: solo estado cuando is_minor = true (jsonb-safe)
+  -- Ubicacion: solo estado/state cuando is_minor = true (jsonb-safe)
   case
     when is_minor = true and last_known_location ? 'estado'
       then jsonb_build_object('estado', last_known_location -> 'estado')
+    when is_minor = true and last_known_location ? 'state'
+      then jsonb_build_object('state', last_known_location -> 'state')
     when is_minor = true
       then null
     else last_known_location

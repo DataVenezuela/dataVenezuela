@@ -52,6 +52,28 @@ insert into public.persons (
   'https://example.com/source2'
 );
 
+-- Insertar menor con location en ingles
+insert into public.persons (
+  person_record_id, event_id, full_name, alternate_names,
+  cedula_hmac, cedula_masked, age_range, sex, is_minor,
+  last_known_location, status, verification_status, confidence_score, source_url
+) values (
+  '00000000-0000-0000-0000-100000000003',
+  '00000000-0000-0000-0000-000000000001',
+  'Minor Test',
+  null,
+  'ghi789hmac',
+  'V-***-003',
+  '{"min":8,"max":12}'::jsonb,
+  'F',
+  true,
+  '{"state":"Carabobo","municipality":"Valencia"}'::jsonb,
+  'missing',
+  'unverified',
+  0.700,
+  'https://example.com/source3'
+);
+
 -- ===== Verificaciones para MENOR =====
 do $$
 declare
@@ -84,6 +106,23 @@ begin
     'FAIL: status debe estar presente para menor';
 
   raise notice 'OK: menor redactado correctamente';
+end $$;
+
+-- ===== Verificaciones para MENOR con clave state =====
+do $$
+declare
+  r record;
+begin
+  select * into r
+  from public.public_serving_persons
+  where person_record_id = '00000000-0000-0000-0000-100000000003';
+
+  assert r.full_name is null,
+    'FAIL: full_name debe ser NULL para menor con state';
+  assert r.last_known_location = '{"state":"Carabobo"}'::jsonb,
+    'FAIL: last_known_location debe contener solo state para menor, got: ' || r.last_known_location::text;
+
+  raise notice 'OK: menor con state redactado correctamente';
 end $$;
 
 -- ===== Verificaciones para ADULTO =====
