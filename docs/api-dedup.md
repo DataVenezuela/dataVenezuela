@@ -187,23 +187,26 @@ No tiene endpoint público en esta fase.
 Campos clave: `artifact_id`, `source_slug`, `fetched_at`, `content_hash`, `r2_url`,
 `pii_status`, `ingestion_status`.
 
-## `GET` / `PUT /api/source-watermarks/{slug}`
+## `GET` / `PUT /api/v1/sources/{slug}/watermark`
 
 Marca por fuente (`source_watermarks`) del último registro procesado, para que el
 exporter no re-procese lo ya enviado. Auth `x-api-key`. La fuente debe pertenecer al
 scraper (mismo patrón de ownership que `POST /api/aportes`); fuente
 ajena/inexistente → `403`.
 
-- **`GET /api/source-watermarks/{slug}`** → `200 { "sourceSlug": "...", "watermarkAt": "<ISO>" }`.
+`/api/source-watermarks/{slug}` sigue disponible como alias legacy; ambos endpoints
+usan el mismo handler y servicio.
+
+- **`GET /api/v1/sources/{slug}/watermark`** → `200 { "sourceSlug": "...", "watermarkAt": "<ISO>" }`.
   Si la fuente existe pero no tiene fila, devuelve el default `1970-01-01T00:00:00Z`.
-- **`PUT /api/source-watermarks/{slug}`** con body `{ "watermarkAt": "<ISO>" }` (ISO
+- **`PUT /api/v1/sources/{slug}/watermark`** con body `{ "watermarkAt": "<ISO>" }` (ISO
   8601 UTC con offset) → upsert; `200` con el valor guardado. Body inválido → `422`.
 
 ```bash
 # leer (default si no hay fila)
-curl http://localhost:3000/api/source-watermarks/funvisis -H "x-api-key: TU_API_KEY"
+curl http://localhost:3000/api/v1/sources/funvisis/watermark -H "x-api-key: TU_API_KEY"
 # actualizar al terminar un batch OK
-curl -X PUT http://localhost:3000/api/source-watermarks/funvisis \
+curl -X PUT http://localhost:3000/api/v1/sources/funvisis/watermark \
   -H "x-api-key: TU_API_KEY" -H "content-type: application/json" \
   -d '{"watermarkAt":"2026-06-28T00:00:00Z"}'
 ```
