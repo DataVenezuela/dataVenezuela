@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionProfile, hasRole, ADMIN_ROLES, type Role } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { slugify } from "@/lib/slug";
+import { uniqueSourceSlug } from "@/lib/sources";
 
 const ASSIGNABLE_ROLES: Role[] = ["public_submitter", "scraper", "admin"];
 
@@ -16,25 +16,6 @@ async function requireAdminId(): Promise<string> {
   const profile = await getSessionProfile();
   if (!hasRole(profile, ADMIN_ROLES)) back("forbidden");
   return profile!.userId;
-}
-
-/** Genera un slug único para una fuente a partir de un nombre. */
-async function uniqueSourceSlug(
-  supabase: ReturnType<typeof createAdminClient>,
-  name: string,
-): Promise<string> {
-  const base = slugify(name) || "fuente";
-  let slug = base;
-  for (let i = 2; i < 100; i++) {
-    const { data } = await supabase
-      .from("sources")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle();
-    if (!data) return slug;
-    slug = `${base}-${i}`;
-  }
-  return `${base}-${Date.now()}`;
 }
 
 /** Aprueba un scraper: lo asciende a rol scraper y le crea su fuente. */
