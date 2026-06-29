@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { aporteInputSchema, watermarkInputSchema } from "@/lib/validation";
+import {
+  aporteInputSchema,
+  quarantineInputSchema,
+  watermarkInputSchema,
+} from "@/lib/validation";
 
 const UUID = "123e4567-e89b-42d3-a456-426614174000";
 const HEX = "a".repeat(64);
@@ -47,6 +51,56 @@ describe("aporteInputSchema — campos de dedup", () => {
 
   it("rechaza runId que no es UUID", () => {
     const r = aporteInputSchema.safeParse({ ...base, runId: "abc" });
+    expect(r.success).toBe(false);
+  });
+});
+
+describe("quarantineInputSchema", () => {
+  const base = {
+    runId: UUID,
+    sourceSlug: "encuentralos",
+    reasonCode: "invalid_schema",
+    riskLevel: "medium",
+  };
+
+  it("acepta el payload mínimo (run_id, source_slug, reason_code, risk_level)", () => {
+    expect(quarantineInputSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("acepta el payload completo", () => {
+    const r = quarantineInputSchema.safeParse({
+      ...base,
+      sourceUrl: "https://fuente.org/1",
+      reasonDetail: "detalle",
+      payloadPreviewRedacted: "frag [IDENTITY_DOCUMENT]",
+      payloadHash: HEX,
+      piiFindingsSummary: { identity_document: 1, phone: 0 },
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it("rechaza reasonCode fuera del enum", () => {
+    const r = quarantineInputSchema.safeParse({ ...base, reasonCode: "lo_que_sea" });
+    expect(r.success).toBe(false);
+  });
+
+  it("rechaza riskLevel fuera del enum", () => {
+    const r = quarantineInputSchema.safeParse({ ...base, riskLevel: "extremo" });
+    expect(r.success).toBe(false);
+  });
+
+  it("rechaza sin source_slug", () => {
+    const r = quarantineInputSchema.safeParse({ ...base, sourceSlug: "" });
+    expect(r.success).toBe(false);
+  });
+
+  it("rechaza run_id que no es UUID", () => {
+    const r = quarantineInputSchema.safeParse({ ...base, runId: "abc" });
+    expect(r.success).toBe(false);
+  });
+
+  it("rechaza payloadHash que no es hex", () => {
+    const r = quarantineInputSchema.safeParse({ ...base, payloadHash: "ZZZ" });
     expect(r.success).toBe(false);
   });
 });

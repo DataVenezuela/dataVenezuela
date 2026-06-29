@@ -80,6 +80,43 @@ export const aporteInputSchema = z
 export type AporteInput = z.infer<typeof aporteInputSchema>;
 
 // ---------------------------------------------------------------------------
+// quarantine — registros no procesables (autenticada con x-api-key). SPEC-0015.
+// El scraper preserva aquí lo que no pudo procesar; el preview ya viene redactado.
+// Los enums deben coincidir con los CHECK de `quarantine_records` (0011).
+// ---------------------------------------------------------------------------
+export const quarantineReasonCodeEnum = z.enum([
+  "pii_untreatable",
+  "invalid_schema",
+  "parser_unavailable",
+  "pdf_no_text",
+  "unclassified_sensitive",
+  "contradictory_sources",
+  "ambiguous_manual_review",
+]);
+
+export const quarantineRiskLevelEnum = z.enum(["low", "medium", "high"]);
+
+export const quarantineInputSchema = z.object({
+  // run_id de la corrida del pipeline (se comparte con el aporte de staging).
+  runId: z.uuid("run_id debe ser un UUID válido"),
+  sourceSlug: z.string().trim().min(1, "source_slug es obligatorio"),
+  sourceUrl: optionalUrl,
+  reasonCode: quarantineReasonCodeEnum,
+  reasonDetail: optionalText,
+  riskLevel: quarantineRiskLevelEnum,
+  // Fragmento YA redactado por el scraper (sin PII en claro), nunca el payload completo.
+  payloadPreviewRedacted: optionalText,
+  payloadHash: optionalHash,
+  // Resumen de hallazgos PII: conteos por tipo, nunca valores en claro.
+  piiFindingsSummary: z.preprocess(
+    emptyToUndefined,
+    z.record(z.string(), z.number()).optional(),
+  ),
+});
+
+export type QuarantineInput = z.infer<typeof quarantineInputSchema>;
+
+// ---------------------------------------------------------------------------
 // source_watermarks — marca por fuente del último registro procesado (PUT).
 // `watermarkAt` debe ser ISO 8601 con offset (UTC), como el resto del contrato.
 // ---------------------------------------------------------------------------
