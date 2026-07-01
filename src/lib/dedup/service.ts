@@ -245,48 +245,32 @@ export async function createAcopioCenter(
 }
 
 // ---------------------------------------------------------------------------
-// Consolidation Upserts: auto-merge Event/AcopioCenter por dedup_hash + trust_tier
+// Consolidation Upserts: insert/update atómico por dedup_hash (ON CONFLICT)
 // ---------------------------------------------------------------------------
 
 export type ConsolidationUpsertResult = {
   id: string;
-  status: "created" | "updated" | "conflict";
-  previous_trust_tier?: number;
+  status: "created" | "updated";
 };
 
 /**
- * Upsert evento: si no existe un evento con el dedup_hash, crea uno nuevo.
- * Si existe, compara trust_tier: el nuevo solo gana si tiene trust_tier MÁS BAJO
- * (1 oficial > 2 ONG > 3 social/anónimo).
- * Retorna 409 si el existente tiene mejor trust_tier.
+ * Upsert atómico de evento por dedup_hash.
+ *
+ * El consolidation job ya seleccionó el ganador (mayor trust_tier) antes de
+ * llamar a este endpoint. La comparación de trust_tier NO ocurre aquí: el
+ * endpoint simplemente inserta o actualiza el registro canónico.
+ *
+ * Usa upsert({ onConflict: "dedup_hash" }) para atomicidad bajo concurrencia.
  */
 export async function upsertEventByDedupHash(
-  input: EventInput & { dedup_hash: string; trust_tier: number },
+  input: EventInput & { dedup_hash: string },
 ): Promise<ConsolidationUpsertResult> {
   const supabase = createAdminClient();
 
-  // Buscar si ya existe un evento con este dedup_hash
-  const { data: existing } = await supabase
+  const { data, error } = await supabase
     .from("events")
-    .select("event_id, trust_tier")
-    .eq("dedup_hash", input.dedup_hash)
-    .maybeSingle();
-
-  if (existing) {
-    // Existe: comparar trust_tier. Menor número = mejor (1=oficial, 3=social/anónimo)
-    if (existing.trust_tier && existing.trust_tier < input.trust_tier) {
-      // El existente es mejor, rechazar
-      return {
-        id: existing.event_id,
-        status: "conflict",
-        previous_trust_tier: existing.trust_tier,
-      };
-    }
-
-    // El nuevo es mejor o igual: actualizar
-    const { error } = await supabase
-      .from("events")
-      .update({
+    .upsert(
+      {
         name: input.name,
         event_type: input.event_type,
         occurred_at: input.occurred_at,
@@ -295,51 +279,25 @@ export async function upsertEventByDedupHash(
         depth_km: input.depth_km ?? null,
         status: input.status,
         external_ids: (input.external_ids ?? null) as never,
-        trust_tier: input.trust_tier,
-      })
-      .eq("dedup_hash", input.dedup_hash);
-
-    if (error) {
-      throw new Error(`Error updating event: ${error.message}`);
-    }
-
-    return {
-      id: existing.event_id,
-      status: "updated",
-      previous_trust_tier: existing.trust_tier,
-    };
-  }
-
-  // No existe: crear nuevo
-  const { data, error } = await supabase
-    .from("events")
-    .insert({
-      name: input.name,
-      event_type: input.event_type,
-      occurred_at: input.occurred_at,
-      affected_states: (input.affected_states ?? null) as never,
-      magnitude: input.magnitude ?? null,
-      depth_km: input.depth_km ?? null,
-      status: input.status,
-      external_ids: (input.external_ids ?? null) as never,
-      dedup_hash: input.dedup_hash,
-      trust_tier: input.trust_tier,
-    })
+        dedup_hash: input.dedup_hash,
+      },
+      { onConflict: "dedup_hash" },
+    )
     .select("event_id")
     .single();
 
   if (error) {
-    throw new Error(`Error creating event: ${error.message}`);
+    throw new Error(`Error upserting event: ${error.message}`);
   }
 
-  return { id: data!.event_id, status: "created" };
+  return { id: data!.event_id, status: "updated" };
 }
 
 /**
- * Upsert acopio center: misma lógica que events.
+ * Upsert atómico de acopio center por dedup_hash.
  */
 export async function upsertAcopioCenterByDedupHash(
-  input: AcopioCenterInput & { dedup_hash: string; trust_tier: number },
+  input: AcopioCenterInput & { dedup_hash: string },
 ): Promise<ConsolidationUpsertResult> {
   const supabase = createAdminClient();
 
@@ -348,28 +306,10 @@ export async function upsertAcopioCenterByDedupHash(
     throw new ReferenceNotFoundError("event_id", input.event_id);
   }
 
-  // Buscar si ya existe un centro de acopio con este dedup_hash
-  const { data: existing } = await supabase
+  const { data, error } = await supabase
     .from("acopio_centers")
-    .select("acopio_id, trust_tier")
-    .eq("dedup_hash", input.dedup_hash)
-    .maybeSingle();
-
-  if (existing) {
-    // Existe: comparar trust_tier
-    if (existing.trust_tier && existing.trust_tier < input.trust_tier) {
-      // El existente es mejor, rechazar
-      return {
-        id: existing.acopio_id,
-        status: "conflict",
-        previous_trust_tier: existing.trust_tier,
-      };
-    }
-
-    // El nuevo es mejor o igual: actualizar
-    const { error } = await supabase
-      .from("acopio_centers")
-      .update({
+    .upsert(
+      {
         event_id: input.event_id,
         name: input.name,
         location: (input.location ?? null) as never,
@@ -382,46 +322,16 @@ export async function upsertAcopioCenterByDedupHash(
         contact_masked: input.contact_masked ?? null,
         capacity: input.capacity ?? null,
         current_load: input.current_load ?? null,
-        trust_tier: input.trust_tier,
-      })
-      .eq("dedup_hash", input.dedup_hash);
-
-    if (error) {
-      throw new Error(`Error updating acopio center: ${error.message}`);
-    }
-
-    return {
-      id: existing.acopio_id,
-      status: "updated",
-      previous_trust_tier: existing.trust_tier,
-    };
-  }
-
-  // No existe: crear nuevo
-  const { data, error } = await supabase
-    .from("acopio_centers")
-    .insert({
-      event_id: input.event_id,
-      name: input.name,
-      location: (input.location ?? null) as never,
-      confidence_score: input.confidence_score ?? undefined,
-      status: input.status,
-      needs: (input.needs ?? null) as never,
-      last_verified_at: input.last_verified_at ?? null,
-      managing_org: input.managing_org ?? null,
-      contact_hmac: input.contact_hmac ?? null,
-      contact_masked: input.contact_masked ?? null,
-      capacity: input.capacity ?? null,
-      current_load: input.current_load ?? null,
-      dedup_hash: input.dedup_hash,
-      trust_tier: input.trust_tier,
-    })
+        dedup_hash: input.dedup_hash,
+      },
+      { onConflict: "dedup_hash" },
+    )
     .select("acopio_id")
     .single();
 
   if (error) {
-    throw new Error(`Error creating acopio center: ${error.message}`);
+    throw new Error(`Error upserting acopio center: ${error.message}`);
   }
 
-  return { id: data!.acopio_id, status: "created" };
+  return { id: data!.acopio_id, status: "updated" };
 }

@@ -5,16 +5,18 @@ import { acopioCenterInputSchema } from "@/lib/dedup/validation";
 import { newRequestId, logIngest } from "@/lib/observability";
 import z from "zod";
 
-// Schema para upsert: acopio center fields + dedup_hash + trust_tier
+// Schema para upsert: acopio center fields + dedup_hash
+// El trust_tier NO se envía ni se persiste en la tabla canónica.
 const acopioCenterUpsertSchema = acopioCenterInputSchema.extend({
   dedup_hash: z.string().regex(/^[0-9a-f]{64}$/),
-  trust_tier: z.number().int().refine((n): n is 1 | 2 | 3 => [1, 2, 3].includes(n)),
 });
 
 /**
  * POST /api/v1/consolidation/acopio-centers/upsert
- * Upsert atómico en tabla `acopio_centers` por dedup_hash.
- * Si el centro existe con mejor trust_tier, retorna 409 (conflict).
+ * Upsert atómico en tabla `acopio_centers` por dedup_hash (ON CONFLICT).
+ *
+ * El consolidation job ya seleccionó el ganador por trust_tier.
+ * Este endpoint solo inserta o actualiza el registro canónico.
  */
 export async function POST(request: Request) {
   const requestId = newRequestId();
@@ -52,19 +54,13 @@ export async function POST(request: Request) {
 
   try {
     const result = await upsertAcopioCenterByDedupHash(parsed.data);
-    const statusCode =
-      result.status === "created"
-        ? 201
-        : result.status === "updated"
-          ? 200
-          : 409;
+    const statusCode = result.status === "created" ? 201 : 200;
 
     return finish(
       Response.json(
         {
           acopio_id: result.id,
           status: result.status,
-          previous_trust_tier: result.previous_trust_tier,
         },
         { status: statusCode },
       ),
@@ -73,8 +69,7 @@ export async function POST(request: Request) {
     if (e instanceof ReferenceNotFoundError) {
       return finish(jsonError(e.message, 404, { field: e.field }));
     }
-    return finish(
-      jsonError(e instanceof Error ? e.message : "Error interno", 500),
-    );
+    console.error("[POST /api/v1/consolidation/acopio-centers/upsert]", e);
+    return finish(jsonError("Error interno", 500));
   }
 }

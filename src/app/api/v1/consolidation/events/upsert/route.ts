@@ -1,4 +1,3 @@
-import { createAdminClient } from "@/lib/supabase/admin";
 import { jsonError, readJson, validationError } from "@/lib/api";
 import { authenticatePartner } from "@/lib/partners";
 import { upsertEventByDedupHash } from "@/lib/dedup/service";
@@ -6,16 +5,19 @@ import { eventInputSchema } from "@/lib/dedup/validation";
 import { newRequestId, logIngest } from "@/lib/observability";
 import z from "zod";
 
-// Schema para upsert: event fields + dedup_hash + trust_tier
+// Schema para upsert: event fields + dedup_hash
+// El trust_tier NO se envía ni se persiste en la tabla canónica.
+// El consolidation job selecciona el ganador antes de llamar este endpoint.
 const eventUpsertSchema = eventInputSchema.extend({
   dedup_hash: z.string().regex(/^[0-9a-f]{64}$/),
-  trust_tier: z.number().int().refine((n): n is 1 | 2 | 3 => [1, 2, 3].includes(n)),
 });
 
 /**
  * POST /api/v1/consolidation/events/upsert
- * Upsert atómico en tabla `events` por dedup_hash.
- * Si el evento existe con mejor trust_tier, retorna 409 (conflict).
+ * Upsert atómico en tabla `events` por dedup_hash (ON CONFLICT).
+ *
+ * El consolidation job ya seleccionó el ganador por trust_tier.
+ * Este endpoint solo inserta o actualiza el registro canónico.
  */
 export async function POST(request: Request) {
   const requestId = newRequestId();
@@ -53,26 +55,19 @@ export async function POST(request: Request) {
 
   try {
     const result = await upsertEventByDedupHash(parsed.data);
-    const statusCode =
-      result.status === "created"
-        ? 201
-        : result.status === "updated"
-          ? 200
-          : 409;
+    const statusCode = result.status === "created" ? 201 : 200;
 
     return finish(
       Response.json(
         {
           event_id: result.id,
           status: result.status,
-          previous_trust_tier: result.previous_trust_tier,
         },
         { status: statusCode },
       ),
     );
   } catch (e) {
-    return finish(
-      jsonError(e instanceof Error ? e.message : "Error interno", 500),
-    );
+    console.error("[POST /api/v1/consolidation/events/upsert]", e);
+    return finish(jsonError("Error interno", 500));
   }
 }

@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { jsonError, readJson } from "@/lib/api";
+import { authenticatePartner } from "@/lib/partners";
 import z from "zod";
 
 const batchConsolidateSchema = z.object({
@@ -10,6 +11,8 @@ const batchConsolidateSchema = z.object({
  * POST /api/aportes/batch-consolidate
  * Marca un lote de aportes como consolidados (setea consolidated_at = now()).
  * Idempotente: si el aporte ya estaba consolidado, se cuenta en already_consolidated.
+ *
+ * Requiere autenticación por x-api-key (consolidation job o admin).
  *
  * Request body:
  * {
@@ -24,6 +27,10 @@ const batchConsolidateSchema = z.object({
  * }
  */
 export async function POST(request: Request) {
+  // --- auth ---
+  const partner = await authenticatePartner(request);
+  if (!partner) return jsonError("API key inválida o ausente", 401);
+
   const body = await readJson(request);
   if (body === null) return jsonError("JSON inválido", 400);
 
@@ -50,7 +57,10 @@ export async function POST(request: Request) {
     .select("id, consolidated_at")
     .in("id", aporte_ids);
 
-  if (fetchError) return jsonError(fetchError.message, 500);
+  if (fetchError) {
+    console.error("[POST /api/aportes/batch-consolidate] fetch error:", fetchError);
+    return jsonError("Error interno al leer aportes", 500);
+  }
 
   // Clasificar cuáles existen y cuáles ya están consolidados
   const existingIds = new Set((existing || []).map((a) => a.id));
@@ -58,7 +68,12 @@ export async function POST(request: Request) {
     (a) => a.consolidated_at !== null,
   ).length;
   const notFoundCount = aporte_ids.length - existingIds.size;
-  const toConsolidate = Array.from(existingIds);
+
+  // Solo marcar los que existen y aún no están consolidados
+  const toConsolidate = Array.from(existingIds).filter((id) => {
+    const record = (existing || []).find((a) => a.id === id);
+    return record && record.consolidated_at === null;
+  });
 
   if (toConsolidate.length === 0) {
     return Response.json({
@@ -68,21 +83,25 @@ export async function POST(request: Request) {
     });
   }
 
-  // Marcar como consolidados
+  // Marcar como consolidados y contar los actualizados
   const now = new Date().toISOString();
-  const { error: updateError } = await supabase
+  const { data: updated, error: updateError } = await supabase
     .from("aportes")
     .update({ consolidated_at: now })
     .in("id", toConsolidate)
-    .is("consolidated_at", null); // Solo actualizar los que aún no estaban consolidados
+    .is("consolidated_at", null)
+    .select("id");
 
-  if (updateError) return jsonError(updateError.message, 500);
+  if (updateError) {
+    console.error("[POST /api/aportes/batch-consolidate] update error:", updateError);
+    return jsonError("Error interno al marcar aportes", 500);
+  }
 
-  // El número real consolidado es los que ya no estaban
-  const consolidated = toConsolidate.length - alreadyConsolidatedCount;
+  // Contar realmente actualizados
+  const consolidatedCount = updated ? updated.length : 0;
 
   return Response.json({
-    consolidated,
+    consolidated: consolidatedCount,
     not_found: notFoundCount,
     already_consolidated: alreadyConsolidatedCount,
   });
