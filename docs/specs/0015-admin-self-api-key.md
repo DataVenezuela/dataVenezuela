@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | en curso |
+| Estado | hecho |
 | Depende de | — |
 | ADR / motivacion | — |
-| PR | (se completa al abrir) |
+| PR | #32 |
 
 ## Contexto
 
@@ -46,17 +46,17 @@ Fuente de verdad: `src/app/account/actions.ts`, `src/lib/sources.ts`.
 
 ## Criterios de aceptacion
 
-- [ ] Un admin en `/account` ve "Solicitar API key"; al pulsarlo recibe una `dv_…`
+- [x] Un admin en `/account` ve "Solicitar API key"; al pulsarlo recibe una `dv_…`
       mostrada una sola vez y la key queda listada.
-- [ ] Al solicitar su primera key, el admin obtiene una `source` con
+- [x] Al solicitar su primera key, el admin obtiene una `source` con
       `owner_id = <admin>` (auto-creada); solicitar una segunda key no crea otra
       fuente.
-- [ ] Esa key autentica contra `POST /api/aportes` con el `source_id` de su fuente.
-- [ ] El admin puede revocar **sus** keys (quedan `active = false`).
-- [ ] Un no-admin que invoque `requestAdminApiKeyAction` recibe error y no se crea
+- [x] Esa key autentica contra `POST /api/aportes` con el `source_id` de su fuente.
+- [x] El admin puede revocar **sus** keys (quedan `active = false`).
+- [x] Un no-admin que invoque `requestAdminApiKeyAction` recibe error y no se crea
       nada.
-- [ ] El flujo de scraper (`CreateKeyForm`, `/register`, aprobación) sigue intacto.
-- [ ] `npm test`, `npm run lint` y `tsc --noEmit` pasan.
+- [x] El flujo de scraper (`CreateKeyForm`, `/register`, aprobación) sigue intacto.
+- [x] `npm test`, `npm run lint` y `tsc --noEmit` pasan.
 
 ## Fuera de alcance
 

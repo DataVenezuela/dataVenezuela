@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | en curso |
+| Estado | hecho |
 | Depende de | SPEC-0013 / #15 (staging dedup en `aportes` + `source_watermarks`) |
 | ADR / motivacion | — |
-| PR | (se completa al abrir) |
+| PR | #19 |
 
 ## Contexto
 
@@ -50,14 +50,14 @@ Fuente de verdad: `supabase/migrations/0009_dedup_consolidation.sql`.
 
 ## Criterios de aceptacion
 
-- [ ] `0009` añade `dedup_hash` + índice UNIQUE a `events` y `acopio_centers`, y crea
+- [x] `0009` añade `dedup_hash` + índice UNIQUE a `events` y `acopio_centers`, y crea
       `dedup_candidates` y `dedup_decisions`; `supabase db reset` corre limpio.
-- [ ] El UNIQUE sobre `dedup_hash` permite el upsert atómico (insertar dos veces el
+- [x] El UNIQUE sobre `dedup_hash` permite el upsert atómico (insertar dos veces el
       mismo `dedup_hash` con `ON CONFLICT DO NOTHING` no crea dos filas).
-- [ ] Las tablas nuevas tienen RLS + grants (service_role total, admin lee).
-- [ ] `dedup_candidates` rechaza `(A,A)` y no permite duplicados invertidos.
-- [ ] `src/lib/database.types.ts` regenerado incluye las columnas y tablas nuevas.
-- [ ] Docs del esquema actualizadas (`docs/api-dedup.md`).
+- [x] Las tablas nuevas tienen RLS + grants (service_role total, admin lee).
+- [x] `dedup_candidates` rechaza `(A,A)` y no permite duplicados invertidos.
+- [x] `src/lib/database.types.ts` regenerado incluye las columnas y tablas nuevas.
+- [x] Docs del esquema actualizadas (`docs/api-dedup.md`).
 
 ## Fuera de alcance
 

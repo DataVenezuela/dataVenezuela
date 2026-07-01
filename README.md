@@ -30,6 +30,10 @@ Tablas de apoyo: `profiles` (rol + estado de scraper), `scraper_applications`
 
 Esquema en `supabase/migrations/`.
 
+El contrato de ingesta normalizada y staging para `VZLA_DEDUP` vive en
+`docs/api-dedup.md`: endpoints `/api/v1/dedup/*`, campos de staging en
+`POST /api/aportes`, `POST /api/v1/quarantine` y metadata `raw_artifacts`.
+
 ## Serving publico
 
 La API publica de consulta se define como un plano separado: Cloudflare Worker +
@@ -96,6 +100,8 @@ API key del scraper demo: header `x-api-key: demo-scraper-key`.
 - `GET /api/aportes` — lectura pública (filtros `source_id`, `external_id`;
   paginación `limit`/`offset`).
 - `GET /api/aportes/:id` — lectura pública por id interno.
+- `POST /api/v1/dedup/*`, `POST /api/v1/quarantine` y watermarks — contrato
+  interno para el pipeline dedup en `docs/api-dedup.md`.
 
 Ejemplo de ingesta:
 
