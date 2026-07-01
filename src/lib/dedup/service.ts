@@ -243,3 +243,95 @@ export async function createAcopioCenter(
   if (error) mapInsertError(error, "event_id", input.event_id);
   return { id: data!.acopio_id };
 }
+
+// ---------------------------------------------------------------------------
+// Consolidation Upserts: insert/update atómico por dedup_hash (ON CONFLICT)
+// ---------------------------------------------------------------------------
+
+export type ConsolidationUpsertResult = {
+  id: string;
+  status: "created" | "updated";
+};
+
+/**
+ * Upsert atómico de evento por dedup_hash.
+ *
+ * El consolidation job ya seleccionó el ganador (mayor trust_tier) antes de
+ * llamar a este endpoint. La comparación de trust_tier NO ocurre aquí: el
+ * endpoint simplemente inserta o actualiza el registro canónico.
+ *
+ * Usa upsert({ onConflict: "dedup_hash" }) para atomicidad bajo concurrencia.
+ */
+export async function upsertEventByDedupHash(
+  input: EventInput & { dedup_hash: string },
+): Promise<ConsolidationUpsertResult> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("events")
+    .upsert(
+      {
+        name: input.name,
+        event_type: input.event_type,
+        occurred_at: input.occurred_at,
+        affected_states: (input.affected_states ?? null) as never,
+        magnitude: input.magnitude ?? null,
+        depth_km: input.depth_km ?? null,
+        status: input.status,
+        external_ids: (input.external_ids ?? null) as never,
+        dedup_hash: input.dedup_hash,
+      },
+      { onConflict: "dedup_hash" },
+    )
+    .select("event_id")
+    .single();
+
+  if (error) {
+    throw new Error(`Error upserting event: ${error.message}`);
+  }
+
+  return { id: data!.event_id, status: "updated" };
+}
+
+/**
+ * Upsert atómico de acopio center por dedup_hash.
+ */
+export async function upsertAcopioCenterByDedupHash(
+  input: AcopioCenterInput & { dedup_hash: string },
+): Promise<ConsolidationUpsertResult> {
+  const supabase = createAdminClient();
+
+  // Validar que el evento exista
+  if (!(await eventExists(supabase, input.event_id))) {
+    throw new ReferenceNotFoundError("event_id", input.event_id);
+  }
+
+  const { data, error } = await supabase
+    .from("acopio_centers")
+    .upsert(
+      {
+        event_id: input.event_id,
+        name: input.name,
+        location: (input.location ?? null) as never,
+        confidence_score: input.confidence_score ?? undefined,
+        status: input.status,
+        needs: (input.needs ?? null) as never,
+        last_verified_at: input.last_verified_at ?? null,
+        managing_org: input.managing_org ?? null,
+        contact_hmac: input.contact_hmac ?? null,
+        contact_masked: input.contact_masked ?? null,
+        capacity: input.capacity ?? null,
+        current_load: input.current_load ?? null,
+        dedup_hash: input.dedup_hash,
+      },
+      { onConflict: "dedup_hash" },
+    )
+    .select("acopio_id")
+    .single();
+
+  if (error) {
+    throw new Error(`Error upserting acopio center: ${error.message}`);
+  }
+
+  return { id: data!.acopio_id, status: "updated" };
+}
