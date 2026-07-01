@@ -347,6 +347,59 @@ export type Database = {
         }
         Relationships: []
       }
+      ingestion_runs: {
+        Row: {
+          ci_run_url: string | null
+          dedup_version: string | null
+          error_sample: string | null
+          errors: number
+          finished_at: string | null
+          records_dup: number | null
+          records_in: number | null
+          records_new: number | null
+          run_id: string
+          source_slug: string | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          ci_run_url?: string | null
+          dedup_version?: string | null
+          error_sample?: string | null
+          errors?: number
+          finished_at?: string | null
+          records_dup?: number | null
+          records_in?: number | null
+          records_new?: number | null
+          run_id?: string
+          source_slug?: string | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          ci_run_url?: string | null
+          dedup_version?: string | null
+          error_sample?: string | null
+          errors?: number
+          finished_at?: string | null
+          records_dup?: number | null
+          records_in?: number | null
+          records_new?: number | null
+          run_id?: string
+          source_slug?: string | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingestion_runs_source_slug_fkey"
+            columns: ["source_slug"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       partner_api_keys: {
         Row: {
           active: boolean
