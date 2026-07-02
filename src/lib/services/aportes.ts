@@ -98,10 +98,11 @@ export async function createAporte(
 }
 
 /**
- * Inserta un batch de aportes (hasta 500) en una sola transacción.
- * - Resuelve fuentes en batch (2 queries máx: una por IDs, otra por slugs).
- * - Deduplica por externalId en batch antes de insertar.
- * - En race condition (23505 en el INSERT batch), reintenta ítem a ítem.
+ * Inserta un batch de aportes (hasta 500).
+ * - Resuelve fuentes en batch (2 queries en paralelo: una por IDs, otra por slugs).
+ *   Si sourceId no resuelve, el slug actúa de fallback.
+ * - Deduplica por externalId en batch antes de insertar (incluye dedup intra-batch).
+ * - Usa ON CONFLICT DO NOTHING para manejar carreras sin retry secuencial.
  */
 export async function createAportesBulk(
   inputs: AporteInput[],
@@ -112,45 +113,62 @@ export async function createAportesBulk(
   const supabase = createAdminClient();
   const errors: string[] = [];
 
-  // 1. Resolver todas las fuentes únicas del batch en 1-2 queries.
+  // 1. Resolver todas las fuentes únicas del batch en 1-2 queries paralelas.
+  //    Se recopilan slugs de todos los ítems (con o sin sourceId) para permitir
+  //    fallback a slug cuando sourceId no resuelve.
   const uniqueSourceIds = [...new Set(inputs.flatMap((i) => (i.sourceId ? [i.sourceId] : [])))];
-  const uniqueSourceSlugs = [...new Set(inputs.flatMap((i) => (!i.sourceId && i.sourceSlug ? [i.sourceSlug] : [])))];
+  const uniqueSourceSlugs = [...new Set(inputs.flatMap((i) => (i.sourceSlug ? [i.sourceSlug] : [])))];
 
   const sourceById = new Map<string, string>();
   const sourceBySlug = new Map<string, string>();
 
+  const sourceQueryPromises: Promise<void>[] = [];
+
   if (uniqueSourceIds.length > 0) {
-    const { data } = await supabase
-      .from("sources")
-      .select("id, slug")
-      .eq("owner_id", scraperId)
-      .in("id", uniqueSourceIds);
-    for (const src of data ?? []) {
-      sourceById.set(src.id, src.id);
-      if (src.slug) sourceBySlug.set(src.slug, src.id);
-    }
+    sourceQueryPromises.push(
+      supabase
+        .from("sources")
+        .select("id, slug")
+        .eq("owner_id", scraperId)
+        .in("id", uniqueSourceIds)
+        .then(({ data, error }) => {
+          if (error) throw new Error(`Source lookup failed: ${error.message}`);
+          for (const src of data ?? []) {
+            sourceById.set(src.id, src.id);
+            if (src.slug) sourceBySlug.set(src.slug, src.id);
+          }
+        }),
+    );
   }
 
   if (uniqueSourceSlugs.length > 0) {
-    const { data } = await supabase
-      .from("sources")
-      .select("id, slug")
-      .eq("owner_id", scraperId)
-      .in("slug", uniqueSourceSlugs);
-    for (const src of data ?? []) {
-      sourceById.set(src.id, src.id);
-      if (src.slug) sourceBySlug.set(src.slug, src.id);
-    }
+    sourceQueryPromises.push(
+      supabase
+        .from("sources")
+        .select("id, slug")
+        .eq("owner_id", scraperId)
+        .in("slug", uniqueSourceSlugs)
+        .then(({ data, error }) => {
+          if (error) throw new Error(`Source lookup failed: ${error.message}`);
+          for (const src of data ?? []) {
+            sourceById.set(src.id, src.id);
+            if (src.slug) sourceBySlug.set(src.slug, src.id);
+          }
+        }),
+    );
   }
 
+  await Promise.all(sourceQueryPromises);
+
   // 2. Mapear cada ítem a su sourceId resuelto; los que fallen van a errors[].
+  //    Si sourceId se provee pero no resuelve, el slug actúa de fallback.
   type ValidItem = { input: AporteInput; resolvedSourceId: string };
   const validItems: ValidItem[] = [];
 
   for (let i = 0; i < inputs.length; i++) {
     const input = inputs[i];
     const resolvedSourceId = input.sourceId
-      ? sourceById.get(input.sourceId)
+      ? (sourceById.get(input.sourceId) ?? (input.sourceSlug ? sourceBySlug.get(input.sourceSlug) : undefined))
       : input.sourceSlug
         ? sourceBySlug.get(input.sourceSlug)
         : undefined;
@@ -163,7 +181,7 @@ export async function createAportesBulk(
 
   if (validItems.length === 0) return { sent: 0, duplicates: 0, errors };
 
-  // 3. Dedup batch: encontrar qué externalIds ya existen.
+  // 3. Dedup batch: encontrar qué externalIds ya existen en la DB.
   const extIds = validItems.flatMap((v) => (v.input.externalId ? [v.input.externalId] : []));
   const existingExtIds = new Set<string>();
 
@@ -179,14 +197,22 @@ export async function createAportesBulk(
   }
 
   // 4. Separar duplicados de los ítems a insertar.
+  //    seenExtIds deduplica ítems con el mismo externalId dentro del mismo request
+  //    para evitar conflictos intra-batch que dispararían el retry costoso.
   let duplicates = 0;
   const toInsert: object[] = [];
+  const seenExtIds = new Set<string>();
 
   for (const { input, resolvedSourceId } of validItems) {
     if (input.externalId && existingExtIds.has(input.externalId)) {
       duplicates++;
       continue;
     }
+    if (input.externalId && seenExtIds.has(input.externalId)) {
+      duplicates++;
+      continue;
+    }
+    if (input.externalId) seenExtIds.add(input.externalId);
     toInsert.push({
       external_id: input.externalId ?? null,
       raw_json: (input.rawJson ?? null) as never,
@@ -209,28 +235,34 @@ export async function createAportesBulk(
 
   if (toInsert.length === 0) return { sent: 0, duplicates, errors };
 
-  // 5. INSERT batch. Si hay race condition (23505), reintenta ítem a ítem.
-  const { error } = await supabase.from("aportes").insert(toInsert);
+  // 5. INSERT batch con ON CONFLICT DO NOTHING para absorber carreras sin retry
+  //    secuencial. Solo las filas efectivamente insertadas aparecen en `inserted`.
+  const { data: inserted, error } = await supabase
+    .from("aportes")
+    .upsert(toInsert, { onConflict: "external_id", ignoreDuplicates: true })
+    .select("id");
 
-  if (!error) return { sent: toInsert.length, duplicates, errors };
-
-  if (error.code === "23505") {
-    let sent = 0;
-    for (const row of toInsert) {
-      const { error: rowErr } = await supabase.from("aportes").insert(row);
-      if (!rowErr) {
-        sent++;
-      } else if (rowErr.code === "23505") {
-        duplicates++;
-      } else {
-        const extId = (row as { external_id?: string }).external_id;
-        errors.push(
-          `Error al insertar external_id=${extId ?? "(sin id)"}: ${rowErr.message}`,
-        );
-      }
-    }
+  if (!error) {
+    const sent = inserted?.length ?? 0;
+    duplicates += toInsert.length - sent;
     return { sent, duplicates, errors };
   }
 
-  throw new Error(`createAportesBulk failed: ${error.message}`);
+  // Error no relacionado con conflictos: reintentar ítem a ítem para rescatar
+  // los que sí se pueden insertar y reportar los que fallan individualmente.
+  let sent = 0;
+  for (const row of toInsert) {
+    const { error: rowErr } = await supabase.from("aportes").insert(row);
+    if (!rowErr) {
+      sent++;
+    } else if (rowErr.code === "23505") {
+      duplicates++;
+    } else {
+      const extId = (row as { external_id?: string }).external_id;
+      errors.push(
+        `Error al insertar external_id=${extId ?? "(sin id)"}: ${rowErr.message}`,
+      );
+    }
+  }
+  return { sent, duplicates, errors };
 }

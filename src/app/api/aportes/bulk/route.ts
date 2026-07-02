@@ -1,5 +1,5 @@
 import { aporteInputSchema, aportesBulkBodySchema } from "@/lib/validation";
-import { createAportesBulk } from "@/lib/services/aportes";
+import { createAportesBulk, SourceOwnershipError } from "@/lib/services/aportes";
 import { authenticatePartner } from "@/lib/partners";
 import { jsonError, readJson, validationError } from "@/lib/api";
 import type { AporteInput } from "@/lib/validation";
@@ -8,8 +8,8 @@ import type { AporteInput } from "@/lib/validation";
  * POST /api/aportes/bulk
  * Ingesta batch autenticada con `x-api-key`. Hasta 500 aportes por request.
  * Idempotente por externalId (igual que el endpoint individual).
- * Responde 200 con { sent, duplicates, errors } aunque haya duplicados o
- * errores por ítem. 422 solo si la estructura externa del body es inválida.
+ * Responde 200 con { sent, duplicates, errors } cuando al menos un ítem fue procesado.
+ * 422 si todos los ítems fallaron o si la estructura externa del body es inválida.
  */
 export async function POST(request: Request) {
   const partner = await authenticatePartner(request);
@@ -40,11 +40,11 @@ export async function POST(request: Request) {
     const result = await createAportesBulk(validInputs, {
       scraperId: partner.scraperId,
     });
-    return Response.json(
-      { ...result, errors: [...parseErrors, ...result.errors] },
-      { status: 200 },
-    );
+    const allErrors = [...parseErrors, ...result.errors];
+    const status = result.sent === 0 && allErrors.length > 0 ? 422 : 200;
+    return Response.json({ ...result, errors: allErrors }, { status });
   } catch (e) {
+    if (e instanceof SourceOwnershipError) return jsonError(e.message, 403);
     return jsonError(e instanceof Error ? e.message : "Error interno", 500);
   }
 }

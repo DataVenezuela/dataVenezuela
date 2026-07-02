@@ -38,6 +38,8 @@ Estado: `propuesto` · `en curso` · `hecho`.
 | 0012 | Decision is_minor en la proyeccion | — | propuesto |
 | 0013 | Ingesta de staging para dedup cross-source (aportes + watermarks) | — | hecho |
 | [0014](./0014-dedup-consolidation.md) | Esquema de consolidacion para el dedup job | 0013 | en curso |
+| [0015](./0015-admin-self-api-key.md) | Admin self-service API key | — | hecho |
+| [0016](./0016-bulk-aportes-endpoint.md) | POST /api/aportes/bulk: ingesta batch | 0013, 0015 | hecho |
 
 Cross-repo (fuera de este repo): mapear enums ES->EN en el pipeline de VZLA_DEDUP
 antes de la ingesta.
