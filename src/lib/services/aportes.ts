@@ -126,35 +126,39 @@ export async function createAportesBulk(
 
   if (uniqueSourceIds.length > 0) {
     sourceQueryPromises.push(
-      supabase
-        .from("sources")
-        .select("id, slug")
-        .eq("owner_id", scraperId)
-        .in("id", uniqueSourceIds)
-        .then(({ data, error }) => {
-          if (error) throw new Error(`Source lookup failed: ${error.message}`);
-          for (const src of data ?? []) {
-            sourceById.set(src.id, src.id);
-            if (src.slug) sourceBySlug.set(src.slug, src.id);
-          }
-        }),
+      Promise.resolve(
+        supabase
+          .from("sources")
+          .select("id, slug")
+          .eq("owner_id", scraperId)
+          .in("id", uniqueSourceIds)
+          .then(({ data, error }) => {
+            if (error) throw new Error(`Source lookup failed: ${error.message}`);
+            for (const src of data ?? []) {
+              sourceById.set(src.id, src.id);
+              if (src.slug) sourceBySlug.set(src.slug, src.id);
+            }
+          }),
+      ),
     );
   }
 
   if (uniqueSourceSlugs.length > 0) {
     sourceQueryPromises.push(
-      supabase
-        .from("sources")
-        .select("id, slug")
-        .eq("owner_id", scraperId)
-        .in("slug", uniqueSourceSlugs)
-        .then(({ data, error }) => {
-          if (error) throw new Error(`Source lookup failed: ${error.message}`);
-          for (const src of data ?? []) {
-            sourceById.set(src.id, src.id);
-            if (src.slug) sourceBySlug.set(src.slug, src.id);
-          }
-        }),
+      Promise.resolve(
+        supabase
+          .from("sources")
+          .select("id, slug")
+          .eq("owner_id", scraperId)
+          .in("slug", uniqueSourceSlugs)
+          .then(({ data, error }) => {
+            if (error) throw new Error(`Source lookup failed: ${error.message}`);
+            for (const src of data ?? []) {
+              sourceById.set(src.id, src.id);
+              if (src.slug) sourceBySlug.set(src.slug, src.id);
+            }
+          }),
+      ),
     );
   }
 
