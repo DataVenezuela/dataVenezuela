@@ -80,6 +80,14 @@ export const aporteInputSchema = z
 export type AporteInput = z.infer<typeof aporteInputSchema>;
 
 // ---------------------------------------------------------------------------
+// aportes/bulk — wrapper para ingesta batch (POST /api/aportes/bulk).
+// Valida solo la estructura externa; cada ítem se valida individualmente en el handler.
+// ---------------------------------------------------------------------------
+export const aportesBulkBodySchema = z.object({
+  aportes: z.array(z.unknown()).min(1).max(500),
+});
+
+// ---------------------------------------------------------------------------
 // source_watermarks — marca por fuente del último registro procesado (PUT).
 // `watermarkAt` debe ser ISO 8601 con offset (UTC), como el resto del contrato.
 // ---------------------------------------------------------------------------
